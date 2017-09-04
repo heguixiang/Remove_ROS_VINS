@@ -1,4 +1,10 @@
 #include "parameters.h"
+#include <string>
+#include <unistd.h>
+#include <iostream>
+
+#define FILENAMEPATH_MAX 80
+using namespace std;
 
 double INIT_DEPTH;
 double MIN_PARALLAX;
@@ -28,6 +34,23 @@ int IMAGE_ROW, IMAGE_COL;
 std::string VINS_FOLDER_PATH;
 int MAX_KEYFRAME_NUM;
 
+//feature tracker section
+std::vector<std::string> CAM_NAMES;
+std::string FISHEYE_MASK;
+int MAX_CNT;
+int MIN_DIST;
+int WINDOW_SIZE_FEATURE_TRACKER;
+int FREQ;
+double F_THRESHOLD;
+int SHOW_TRACK;
+int STEREO_TRACK;
+int EQUALIZE;
+int ROW;
+int COL;
+int FOCAL_LENGTH;
+int FISHEYE;
+bool PUB_THIS_FRAME;
+
 template <typename T>
 T readParam(ros::NodeHandle &n, std::string name)
 {
@@ -44,17 +67,22 @@ T readParam(ros::NodeHandle &n, std::string name)
     return ans;
 }
 
-void readParameters(ros::NodeHandle &n)
+
+void readParameters(const string & config_file)
 {
-    std::string config_file;
-    config_file = readParam<std::string>(n, "config_file");
-    cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
+
+
+    cv::FileStorage fsSettings(config_file.c_str(), cv::FileStorage::READ);
     if(!fsSettings.isOpened())
     {
-        std::cerr << "ERROR: Wrong path to settings" << std::endl;
+        std::cerr << "ERROR: Wrong path to settings " << config_file << std::endl;
     }
 
-    VINS_FOLDER_PATH = readParam<std::string>(n, "vins_folder");
+
+    VINS_FOLDER_PATH = getcwd(NULL,FILENAMEPATH_MAX);
+    fsSettings["output_path"] >> VINS_RESULT_PATH;
+
+   
     fsSettings["image_topic"] >> IMAGE_TOPIC;
     fsSettings["imu_topic"] >> IMU_TOPIC;
 
@@ -68,6 +96,7 @@ void readParameters(ros::NodeHandle &n)
 
     fsSettings["output_path"] >> VINS_RESULT_PATH;
     VINS_RESULT_PATH = VINS_FOLDER_PATH + VINS_RESULT_PATH;
+    cout << VINS_RESULT_PATH << endl;
     std::ofstream foutC(VINS_RESULT_PATH, std::ios::out);
     foutC.close();
 
@@ -133,5 +162,29 @@ void readParameters(ros::NodeHandle &n)
     BIAS_GYR_THRESHOLD = 0.1;
     MAX_KEYFRAME_NUM = 1000;
     
+    // feature tracker
+    fsSettings["image_topic"] >> IMAGE_TOPIC;
+    fsSettings["imu_topic"] >> IMU_TOPIC;
+    MAX_CNT = fsSettings["max_cnt"];
+    MIN_DIST = fsSettings["min_dist"];
+    ROW = fsSettings["image_height"];
+    COL = fsSettings["image_width"];
+   FREQ = fsSettings["freq"];
+    F_THRESHOLD = fsSettings["F_threshold"];
+    SHOW_TRACK = fsSettings["show_track"];
+   EQUALIZE = fsSettings["equalize"];
+    FISHEYE = fsSettings["fisheye"];
+    if (FISHEYE == 1)
+        FISHEYE_MASK = VINS_FOLDER_PATH + "config/fisheye_mask.jpg";
+    CAM_NAMES.push_back(config_file);
+
+    WINDOW_SIZE_FEATURE_TRACKER = 20;
+    STEREO_TRACK = false;
+    FOCAL_LENGTH = 460;
+    PUB_THIS_FRAME = false; 
+
+    if (FREQ == 0)
+        FREQ = 100;
+   
     fsSettings.release();
 }

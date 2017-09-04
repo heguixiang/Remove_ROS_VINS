@@ -1,3 +1,4 @@
+#if 0
 #include "feature_tracker_parameters.h"
 
 //std::string IMAGE_TOPIC;
@@ -72,3 +73,4 @@ void readFeatureTrackParameters(ros::NodeHandle &n)
 
 
 }
+#endif

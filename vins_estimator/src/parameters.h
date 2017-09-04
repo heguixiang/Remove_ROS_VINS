@@ -7,6 +7,8 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
 #include <fstream>
+#include <string>
+using namespace std;
 
 //const double FOCAL_LENGTH = 460.0;
 extern int FOCAL_LENGTH; //add
@@ -46,7 +48,29 @@ extern std::string CAM_NAMES_ESTIMATOR;
 extern std::string IMAGE_TOPIC;
 extern std::string IMU_TOPIC;
 
-void readParameters(ros::NodeHandle &n);
+//feature tracker section
+extern int ROW;
+extern int COL;
+extern int FOCAL_LENGTH;
+//const int NUM_OF_CAM = 1;
+
+
+extern std::string IMAGE_TOPIC;
+extern std::string IMU_TOPIC;
+extern std::string FISHEYE_MASK;
+extern std::vector<std::string> CAM_NAMES;
+extern int MAX_CNT;
+extern int MIN_DIST;
+extern  int WINDOW_SIZE_FEATURE_TRACKER;
+extern int FREQ;
+extern double F_THRESHOLD;
+extern int SHOW_TRACK;
+extern int STEREO_TRACK;
+extern int EQUALIZE;
+extern int FISHEYE;
+extern bool PUB_THIS_FRAME;
+
+void readParameters(const string & );
 
 enum SIZE_PARAMETERIZATION
 {

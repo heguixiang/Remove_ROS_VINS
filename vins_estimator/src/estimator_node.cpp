@@ -188,9 +188,9 @@ void imu_callback(const sensor_msgs::ImuConstPtr &imu_msg)
 {
     m_buf.lock();
     imu_buf.push(imu_msg);
-    ROS_INFO("----------IMU DATA. timestamp %f------------",imu_msg->header.stamp.toSec());
+   // ROS_INFO("----------IMU DATA. timestamp %f------------",imu_msg->header.stamp.toSec());
     m_buf.unlock();
-    con.notify_one();
+  //  con.notify_one();   //remove by solomon
     
 
     {
@@ -1042,7 +1042,7 @@ void img_callback(const cv::Mat &show_img, const double &timestamp)
         }
 
     }
-    ROS_INFO("whole feature tracker processing costs: %f", t_r.toc());
+  //  ROS_INFO("whole feature tracker processing costs: %f", t_r.toc());
    
 }
 /******************* load image begin ***********************/
@@ -1072,7 +1072,7 @@ void LoadImages(const string &strImagePath, const string &strTimesStampsPath,
 
 /******************* load IMU begin ***********************/
 
-void LoadImus(ifstream & fImus, const double imageTimestamp)
+void LoadImus(ifstream & fImus, const double &imageTimestamp)
 {
 
     while(!fImus.eof())
@@ -1105,7 +1105,7 @@ void LoadImus(ifstream & fImus, const double imageTimestamp)
 	    imudata->linear_acceleration.z = data[6];
 	    imudata->header.stamp = ros::Time(data[0]);
 	    imu_callback(imudata);
-	    if (data[0]>=imageTimestamp);        //load all imu data produced in interval time between two consecutive frams 
+	    if (data[0]>imageTimestamp)       //load all imu data produced in interval time between two consecutive frams 
 	      break;
 	}
     }
@@ -1115,22 +1115,33 @@ void LoadImus(ifstream & fImus, const double imageTimestamp)
 int main(int argc, char **argv)
 {
   /******************* load image begin ***********************/
-    if(argc != 4)
+    if(argc != 5)
     {
 	cerr << endl << "Usage: ./vins_estimator path_to_setting_file path_to_image_folder path_to_times_file path_to_imu_data_file" <<endl;
 	return 1;
     }
+    ros::init(argc, argv, "vins_estimator");
+    ros::NodeHandle n("~");
+    ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
     
-  /*  int imuNum = imu_buf.size();
-    if(imuNum <= 0)
-    {
-      cerr << "ERROR: Failed to load imus" << endl;
-      return 1;
-    }
-    */
+    //read parameters section
+    readParameters(argv[1]);
+    
+    estimator.setParameter();
+#ifdef EIGEN_DONT_PARALLELIZE
+    ROS_DEBUG("EIGEN_DONT_PARALLELIZE");
+#endif
+    ROS_WARN("waiting for image and imu...");
+    
+
+
+    for (int i = 0; i < NUM_OF_CAM; i++)
+        trackerData[i].readIntrinsicParameter(CAM_NAMES[i]); //add
+
+    registerPub(n);
     vector<string> vStrImagesFileNames;
     vector<double> vTimeStamps;
-    LoadImages(string(argv[1]),string(argv[2]),vStrImagesFileNames,vTimeStamps);
+    LoadImages(string(argv[2]),string(argv[3]),vStrImagesFileNames,vTimeStamps);
     
     int imageNum = vStrImagesFileNames.size();
     
@@ -1141,24 +1152,28 @@ int main(int argc, char **argv)
     }
     //imu data file 
     ifstream fImus;
-    fImus.open(argv[3]);
+    fImus.open(argv[4]);
     
     cv::Mat image;
     int ni;//num image
+    
+    std::thread measurement_process{process};
     for(ni=0; ni<imageNum; ni++)
     {
+      
+      double  tframe = vTimeStamps[ni];   //timestamp
+       // read imu data
+       LoadImus(fImus,tframe);
+       
 	//read image from file
       image = cv::imread(vStrImagesFileNames[ni],CV_LOAD_IMAGE_UNCHANGED);
-      double  tframe = vTimeStamps[ni];   //timestamp
+      
       if(image.empty())
       {
 	  cerr << endl << "Failed to load image: " << vStrImagesFileNames[ni] <<endl;
 	  return 1;
       }
       std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-      
-      // read imu data
-       LoadImus(fImus,tframe);
       
       
       //TODO process image

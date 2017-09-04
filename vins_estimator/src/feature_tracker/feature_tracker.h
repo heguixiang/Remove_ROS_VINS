@@ -13,7 +13,7 @@
 #include "camodocal/camera_models/CataCamera.h"
 #include "camodocal/camera_models/PinholeCamera.h"
 
-#include "feature_tracker_parameters.h"
+#include "../parameters.h"
 #include "tic_toc.h"
 
 using namespace std;
