@@ -3,7 +3,7 @@
 #common parameters
 imu_topic: "/imu0"
 image_topic: "/cam0/image_raw"
-output_path: "/config/euroc/vins_result.csv"         # vins outputs will be wrttento vins_folder_path + output_path
+output_path: "/src/config/euroc/vins_result.csv"         # vins outputs will be wrttento vins_folder_path + output_path
 
 #camera calibration 
 model_type: PINHOLE
@@ -47,7 +47,7 @@ max_cnt: 150            # max feature number in feature tracking
 min_dist: 30            # min distance between two features 
 freq: 10                # frequence (Hz) of publish tracking result. At least 10Hz for good estimation. If set 0, the frequence will be same as raw image 
 F_threshold: 1.0        # ransac threshold (pixel)
-show_track: 1           # publish tracking image as topic
+show_track: 0           # publish tracking image as topic
 equalize: 1             # if image is too dark or light, trun on equalize to find enough features
 fisheye: 0              # if using fisheye, trun on it. A circle mask will be loaded to remove edge noisy points
 
@@ -67,8 +67,8 @@ g_norm: 9.81007     # gravity magnitude
 #loop closure parameters
 loop_closure: 1   #if you want to use loop closure to minimize the drift, set loop_closure true and give your brief pattern file path and vocabulary file path accordingly;
                      #also give the camera calibration file same as feature_tracker node
-pattern_file: "/support_files/brief_pattern.yml"
-voc_file: "/support_files/brief_k10L6.bin"
+pattern_file: "/src/support_files/brief_pattern.yml"
+voc_file: "/src/support_files/brief_k10L6.bin"
 min_loop_num: 25
 
 

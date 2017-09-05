@@ -1,0 +1,44 @@
+[CMake]
+Build Directory Count=1
+Current Build Directory Index=0
+ProjectRootRelative=./
+
+[CMake][CMake Build Directory 0]
+Build Directory Path=file:///home/solomon/merge_vins_version/build
+Build Type=
+CMake Binary=file:///usr/bin/cmake
+Environment Profile=
+Extra Arguments=
+Install Directory=file:///home/solomon/merge_vins_version/install
+
+[Launch]
+Launch Configurations=Launch Configuration 0
+
+[Launch][Launch Configuration 0]
+Configured Launch Modes=execute
+Configured Launchers=nativeAppLauncher
+Name=New Application Launcher
+Type=Native Application
+
+[Launch][Launch Configuration 0][Data]
+Arguments=./src/config/euroc/euroc_config.yaml ./data/image/MH_01_easy/data/ ./data/timestamps/MH01.txt ./data/imu/data.csv
+Debugger Shell=
+Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
+Dependency Action=Nothing
+Display Demangle Names=true
+Display Static Members=false
+EnvironmentGroup=default
+Executable=file:///home/solomon/merge_vins_version/devel/lib/vins_estimator/vins_estimator
+External Terminal=konsole --noclose --workdir %workdir -e %exe
+GDB Path=file:///home/solomon/merge_vins_version/devel/lib/vins_estimator/vins_estimator
+Project Target=Remove_ROS_VINS,benchmark_publisher,benchmark_publisher
+Remote GDB Config Script=
+Remote GDB Run Script=
+Remote GDB Shell Script=
+Start With=ApplicationOutput
+Use External Terminal=false
+Working Directory=
+isExecutable=true
+
+[Project]
+VersionControlSupport=kdevgit

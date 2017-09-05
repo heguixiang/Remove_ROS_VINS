@@ -51,22 +51,6 @@ int FOCAL_LENGTH;
 int FISHEYE;
 bool PUB_THIS_FRAME;
 
-template <typename T>
-T readParam(ros::NodeHandle &n, std::string name)
-{
-    T ans;
-    if (n.getParam(name, ans))
-    {
-        ROS_INFO_STREAM("Loaded " << name << ": " << ans);
-    }
-    else
-    {
-        ROS_ERROR_STREAM("Failed to load " << name);
-        n.shutdown();
-    }
-    return ans;
-}
-
 
 void readParameters(const string & config_file)
 {
@@ -142,20 +126,18 @@ void readParameters(const string & config_file)
         ROS_INFO_STREAM("Extrinsic_T : " << std::endl << TIC[0].transpose());
         
     } 
-
-
-
     LOOP_CLOSURE = fsSettings["loop_closure"];
     if (LOOP_CLOSURE == 1)
     {
         fsSettings["voc_file"] >> VOC_FILE;;
         fsSettings["pattern_file"] >> PATTERN_FILE;
+	cout << PATTERN_FILE << endl;
         VOC_FILE = VINS_FOLDER_PATH + VOC_FILE;
         PATTERN_FILE = VINS_FOLDER_PATH + PATTERN_FILE;
         MIN_LOOP_NUM = fsSettings["min_loop_num"];
         CAM_NAMES_ESTIMATOR = config_file;   //add
     }
-
+  
 
     INIT_DEPTH = 5.0;
     BIAS_ACC_THRESHOLD = 0.1;
