@@ -31,15 +31,6 @@
 #include <message_filters/subscriber.h>
 #include "feature_tracker/feature_tracker.h"
 
-#include <stdlib.h>
-#include <signal.h>
-volatile sig_atomic_t sigflag=0;
-void sigint_function(int sig)
-{
-  
-  sigflag =1;
-}
-
 #define SHOW_UNDISTORTION 0
 
 vector<uchar> r_status;
@@ -135,8 +126,6 @@ void predict(const sensor_msgs::ImuConstPtr &imu_msg)
 
     acc_0 = linear_acceleration;
     gyr_0 = angular_velocity;
-   // ROS_INFO_STREAM("acc_0 : " << acc_0);
-  //  ROS_INFO_STREAM("gyr_0 : " << gyr_0);
 }
 
 void update()
@@ -161,12 +150,12 @@ std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointC
 getMeasurements()
 {
     std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointCloudConstPtr>> measurements;
+
     while (true)
     {
-        if (imu_buf.empty() || feature_buf.empty())	
-	{
+      
+        if (imu_buf.empty() || feature_buf.empty())	   
             return measurements;
-	}
         if (!(imu_buf.back()->header.stamp > feature_buf.front()->header.stamp))
         {
             ROS_WARN("wait for imu, only should happen at the beginning");
@@ -189,11 +178,7 @@ getMeasurements()
             IMUs.emplace_back(imu_buf.front());
             imu_buf.pop();
         }
-
-        ROS_INFO_STREAM("IMUs end data timestamp: " << IMUs.back()->header.stamp << "IMUs size: "<< IMUs.size() << "img_msg timestamp" << img_msg->header.stamp );
-	//if(!imu_buf.empty())
-	//  ROS_INFO_STREAM("imu_buf exist data: timestamp = " << imu_buf.front()->header.stamp);
-	//ROS_INFO_STREAM("IMUs lastset data size:" << IMUs.size() << " timestamp:" << IMUs.back()->header.stamp << " img_msg timestamp:" << img_msg->header.stamp);
+// ROS_INFO_STREAM("IMUs end data timestamp: " << IMUs.back()->header.stamp << "IMUs size: "<< IMUs.size() << "img_msg timestamp" << img_msg->header.stamp );
         measurements.emplace_back(IMUs, img_msg);
     }
     return measurements;
@@ -205,37 +190,25 @@ void imu_callback(const sensor_msgs::ImuConstPtr &imu_msg)
     imu_buf.push(imu_msg);
    // ROS_INFO("----------IMU DATA. timestamp %f------------",imu_msg->header.stamp.toSec());
     m_buf.unlock();
-    con.notify_one();   //remove by solomon
+  //  con.notify_one();   //remove by solomon
     
 
     {
         std::lock_guard<std::mutex> lg(m_state);
         predict(imu_msg);
-     //   std_msgs::Header header = imu_msg->header;
-     //   header.frame_id = "world";
-       // if (estimator.solver_flag == Estimator::SolverFlag::NON_LINEAR)
-         //   pubLatestOdometry(tmp_P, tmp_Q, tmp_V, header);
+   //     std_msgs::Header header = imu_msg->header;
+    //    header.frame_id = "world";
+     //   if (estimator.solver_flag == Estimator::SolverFlag::NON_LINEAR)
+      //      pubLatestOdometry(tmp_P, tmp_Q, tmp_V, header);
     }
 }
-#if 0
-void raw_image_callback(const sensor_msgs::ImageConstPtr &img_msg)
-{
-    cv_bridge::CvImagePtr img_ptr = cv_bridge::toCvCopy(img_msg, sensor_msgs::image_encodings::MONO8);
-    //image_pool[img_msg->header.stamp.toNSec()] = img_ptr->image;
-    if(LOOP_CLOSURE)
-    {
-        i_buf.lock();
-        image_buf.push(make_pair(img_ptr->image, img_msg->header.stamp.toSec()));
-        i_buf.unlock();
-    }
-}
-#endif
+
 void feature_callback(const sensor_msgs::PointCloudConstPtr &feature_msg)
 {
     m_buf.lock();
     
     feature_buf.push(feature_msg);
-  //  ROS_INFO("----------feature timestamp %f------------",feature_msg->header.stamp.toSec());
+    //ROS_INFO("----------feature timestamp %f------------",feature_msg->header.stamp.toSec());
     m_buf.unlock();
     con.notify_one();
 }
@@ -493,16 +466,14 @@ void process()
 {
     while (true)
     {
-        
         std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointCloudConstPtr>> measurements;
         std::unique_lock<std::mutex> lk(m_buf);
-
         con.wait(lk, [&]
                  {
             return (measurements = getMeasurements()).size() != 0;
                  });
         lk.unlock();
-//	ROS_INFO("measurements size: %d", measurements.size());
+
         for (auto &measurement : measurements)
         {
             for (auto &imu_msg : measurement.first)
@@ -521,13 +492,9 @@ void process()
                 double x = img_msg->points[i].x;
                 double y = img_msg->points[i].y;
                 double z = img_msg->points[i].z;
-		//ROS_INFO_STREAM("feature_id:"<<feature_id<<"camera_id"<<camera_id);
-		//ROS_INFO_STREAM("x:"<<x<<"y"<<y);
                 ROS_ASSERT(z == 1);
-	//	ROS_INFO_STREAM("feature point location:" << x << " " << y);
                 image[feature_id].emplace_back(camera_id, Vector3d(x, y, z));
             }
-           
             estimator.processImage(image, img_msg->header);
             /**
             *** start build keyframe database for loop closure
@@ -545,7 +512,6 @@ void process()
                     else
                         it++;
                 }
-               
                 m_retrive_data_buf.lock();
                 while(!retrive_data_buf.empty())
                 {
@@ -568,8 +534,8 @@ void process()
                     //assert(estimator.Headers[WINDOW_SIZE - 1].stamp.toSec() == image_buf.front().second);
                     // relative_T   i-1_T_i relative_R  i-1_R_i
                     cv::Mat KeyFrame_image;
-		   
                     KeyFrame_image = image_buf.front().first;
+                    
                     const char *pattern_file = PATTERN_FILE.c_str();
                     Vector3d cur_T;
                     Matrix3d cur_R;
@@ -608,7 +574,6 @@ void process()
             double whole_t = t_s.toc();
             printStatistics(estimator, whole_t);
             std_msgs::Header header = img_msg->header;
-	 //  ROS_INFO("img_msg timestamp: %f",header.stamp.toSec());
             header.frame_id = "world";
             cur_header = header;
             m_loop_drift.lock();
@@ -625,246 +590,24 @@ void process()
             m_loop_drift.unlock();
             //ROS_ERROR("end: %f, at %f", img_msg->header.stamp.toSec(), ros::Time::now().toSec());
         }
-		ROS_INFO_STREAM("PROCESS buffer lock before");
         m_buf.lock();
         m_state.lock();
         if (estimator.solver_flag == Estimator::SolverFlag::NON_LINEAR)
             update();
         m_state.unlock();
         m_buf.unlock();
-		ROS_INFO_STREAM("PROCESS buffer lock end");
-
-	
-   }
+    }
 }
-#if 0
-/****************** feature tracker section ***********************/
-void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
+
+
+void img_callback(const cv::Mat &show_img, const ros::Time &timestamp)
 {
-    if(first_image_flag)
-    {
-        first_image_flag = false;
-        first_image_time = img_msg->header.stamp.toSec();
-    }
-
-    // frequency control
-    if (round(1.0 * pub_count / (img_msg->header.stamp.toSec() - first_image_time)) <= FREQ)
-    {
-        PUB_THIS_FRAME = true;
-        // reset the frequency control
-        if (abs(1.0 * pub_count / (img_msg->header.stamp.toSec() - first_image_time) - FREQ) < 0.01 * FREQ)
-        {
-            first_image_time = img_msg->header.stamp.toSec();
-            pub_count = 0;
-        }
-    }
-    else
-        PUB_THIS_FRAME = false;
-
-    cv_bridge::CvImageConstPtr ptr = cv_bridge::toCvCopy(img_msg, sensor_msgs::image_encodings::MONO8);
-    cv::Mat show_img = ptr->image;
-    TicToc t_r;
-    for (int i = 0; i < NUM_OF_CAM; i++)
-    {
-        ROS_DEBUG("processing camera %d", i);
-        if (i != 1 || !STEREO_TRACK)
-            trackerData[i].readImage(ptr->image.rowRange(ROW * i, ROW * (i + 1)));
-        else
-        {
-            if (EQUALIZE)
-            {
-                cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
-                clahe->apply(ptr->image.rowRange(ROW * i, ROW * (i + 1)), trackerData[i].cur_img);
-            }
-            else
-                trackerData[i].cur_img = ptr->image.rowRange(ROW * i, ROW * (i + 1));
-        }
-
-#if SHOW_UNDISTORTION
-        trackerData[i].showUndistortion("undistrotion_" + std::to_string(i));
-#endif
-    }
-
-    if ( PUB_THIS_FRAME && STEREO_TRACK && trackerData[0].cur_pts.size() > 0)
-    {
-        pub_count++;
-        r_status.clear();
-        r_err.clear();
-        TicToc t_o;
-        cv::calcOpticalFlowPyrLK(trackerData[0].cur_img, trackerData[1].cur_img, trackerData[0].cur_pts, trackerData[1].cur_pts, r_status, r_err, cv::Size(21, 21), 3);
-        ROS_DEBUG("spatial optical flow costs: %fms", t_o.toc());
-        vector<cv::Point2f> ll, rr;
-        vector<int> idx;
-        for (unsigned int i = 0; i < r_status.size(); i++)
-        {
-            if (!inBorder(trackerData[1].cur_pts[i]))
-                r_status[i] = 0;
-
-            if (r_status[i])
-            {
-                idx.push_back(i);
-
-                Eigen::Vector3d tmp_p;
-                trackerData[0].m_camera->liftProjective(Eigen::Vector2d(trackerData[0].cur_pts[i].x, trackerData[0].cur_pts[i].y), tmp_p);
-                tmp_p.x() = FOCAL_LENGTH * tmp_p.x() / tmp_p.z() + COL / 2.0;
-                tmp_p.y() = FOCAL_LENGTH * tmp_p.y() / tmp_p.z() + ROW / 2.0;
-                ll.push_back(cv::Point2f(tmp_p.x(), tmp_p.y()));
-
-                trackerData[1].m_camera->liftProjective(Eigen::Vector2d(trackerData[1].cur_pts[i].x, trackerData[1].cur_pts[i].y), tmp_p);
-                tmp_p.x() = FOCAL_LENGTH * tmp_p.x() / tmp_p.z() + COL / 2.0;
-                tmp_p.y() = FOCAL_LENGTH * tmp_p.y() / tmp_p.z() + ROW / 2.0;
-                rr.push_back(cv::Point2f(tmp_p.x(), tmp_p.y()));
-            }
-        }
-        if (ll.size() >= 8)
-        {
-            vector<uchar> status;
-            TicToc t_f;
-            cv::findFundamentalMat(ll, rr, cv::FM_RANSAC, 1.0, 0.5, status);
-            ROS_DEBUG("find f cost: %f", t_f.toc());
-            int r_cnt = 0;
-            for (unsigned int i = 0; i < status.size(); i++)
-            {
-                if (status[i] == 0)
-                    r_status[idx[i]] = 0;
-                r_cnt += r_status[idx[i]];
-            }
-        }
-    }
-
-    for (unsigned int i = 0;; i++)
-    {
-        bool completed = false;
-        for (int j = 0; j < NUM_OF_CAM; j++)
-            if (j != 1 || !STEREO_TRACK)
-                completed |= trackerData[j].updateID(i);
-        if (!completed)
-            break;
-    }
-
-   if (PUB_THIS_FRAME)
-   {
-        pub_count++;
-        sensor_msgs::PointCloudPtr feature_points(new sensor_msgs::PointCloud);
-        sensor_msgs::ChannelFloat32 id_of_point;
-        sensor_msgs::ChannelFloat32 u_of_point;
-        sensor_msgs::ChannelFloat32 v_of_point;
-
-        feature_points->header = img_msg->header;
-        feature_points->header.frame_id = "world";
-
-        vector<set<int>> hash_ids(NUM_OF_CAM);
-        for (int i = 0; i < NUM_OF_CAM; i++)
-        {
-            if (i != 1 || !STEREO_TRACK)
-            {
-                auto un_pts = trackerData[i].undistortedPoints();
-                auto &cur_pts = trackerData[i].cur_pts;
-                auto &ids = trackerData[i].ids;
-                for (unsigned int j = 0; j < ids.size(); j++)
-                {
-                    int p_id = ids[j];
-                    hash_ids[i].insert(p_id);
-                    geometry_msgs::Point32 p;
-                    p.x = un_pts[j].x;
-                    p.y = un_pts[j].y;
-                    p.z = 1;
-
-                    feature_points->points.push_back(p);
-                    id_of_point.values.push_back(p_id * NUM_OF_CAM + i);
-                    u_of_point.values.push_back(cur_pts[j].x);
-                    v_of_point.values.push_back(cur_pts[j].y);
-                    ROS_ASSERT(inBorder(cur_pts[j]));
-                }
-            }
-            else if (STEREO_TRACK)
-            {
-                auto r_un_pts = trackerData[1].undistortedPoints();
-                auto &ids = trackerData[0].ids;
-                for (unsigned int j = 0; j < ids.size(); j++)
-                {
-                    if (r_status[j])
-                    {
-                        int p_id = ids[j];
-                        hash_ids[i].insert(p_id);
-                        geometry_msgs::Point32 p;
-                        p.x = r_un_pts[j].x;
-                        p.y = r_un_pts[j].y;
-                        p.z = 1;
-
-                        feature_points->points.push_back(p);
-                        id_of_point.values.push_back(p_id * NUM_OF_CAM + i);
-                    }
-                }
-            }
-        }
-        feature_points->channels.push_back(id_of_point);
-        feature_points->channels.push_back(u_of_point);
-        feature_points->channels.push_back(v_of_point);
-        ROS_INFO("publish %f, at %f", feature_points->header.stamp.toSec(), ros::Time::now().toSec());
-     //   pub_img.publish(feature_points);
-        feature_callback(feature_points);          //add
-	
-
-        if (SHOW_TRACK)
-        {
-            ptr = cv_bridge::cvtColor(ptr, sensor_msgs::image_encodings::BGR8);
-
-            //cv::Mat stereo_img(ROW * NUM_OF_CAM, COL, CV_8UC3);
-            cv::Mat stereo_img = ptr->image;
-
-            for (int i = 0; i < NUM_OF_CAM; i++)
-            {
-                cv::Mat tmp_img = stereo_img.rowRange(i * ROW, (i + 1) * ROW);
-                cv::cvtColor(show_img, tmp_img, CV_GRAY2RGB);
-                if (i != 1 || !STEREO_TRACK)
-                {
-                    for (unsigned int j = 0; j < trackerData[i].cur_pts.size(); j++)
-                    {
-                        double len = std::min(1.0, 1.0 * trackerData[i].track_cnt[j] / WINDOW_SIZE_FEATURE_TRACKER);
-                        cv::circle(tmp_img, trackerData[i].cur_pts[j], 2, cv::Scalar(255 * (1 - len), 0, 255 * len), 2);
-                        //char name[10];
-                        //sprintf(name, "%d", trackerData[i].ids[j]);
-                        //cv::putText(tmp_img, name, trackerData[i].cur_pts[j], cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
-                    }
-                }
-                else
-                {
-                    for (unsigned int j = 0; j < trackerData[i].cur_pts.size(); j++)
-                    {
-                        if (r_status[j])
-                        {
-                            cv::circle(tmp_img, trackerData[i].cur_pts[j], 2, cv::Scalar(0, 255, 0), 2);
-                            cv::line(stereo_img, trackerData[i - 1].cur_pts[j], trackerData[i].cur_pts[j] + cv::Point2f(0, ROW), cv::Scalar(0, 255, 0));
-                        }
-                    }
-                }
-            }
-            /*
-            cv::imshow("vis", stereo_img);
-            cv::waitKey(5);
-            */
-            pub_match.publish(ptr->toImageMsg());
-        }
-
-    }
-    ROS_INFO("whole feature tracker processing costs: %f", t_r.toc());
-   
-}
-/****************** feature tracker section end***********************/
-#endif
-
-
-void img_callback(const cv::Mat &show_img, const ros::Time timestamp)
-{
-    // raw_image_callback
     if(LOOP_CLOSURE)
     {
-      i_buf.lock();
-      image_buf.push(make_pair(show_img,timestamp.toSec()));
-      i_buf.unlock();
+        i_buf.lock();
+        image_buf.push(make_pair(show_img, timestamp.toSec()));
+        i_buf.unlock();
     }
-  
     if(first_image_flag)
     {
         first_image_flag = false;
@@ -978,11 +721,7 @@ void img_callback(const cv::Mat &show_img, const ros::Time timestamp)
         sensor_msgs::ChannelFloat32 v_of_point;
 
       //  feature_points->header = img_msg->header;
-     
 	feature_points->header.stamp = timestamp; //here need to double check,because of missing seq variable assignment
-	//feature_points->header.stamp = ros::Time(timestamp); //here need to double check,because of missing seq variable assignment
-	//ROS_INFO_STREAM("feature_points->header.stamp:" << feature_points->header.stamp );
-	//cout <<  "timestamp: " << setiosflags(ios::fixed)<< timestamp  <<endl;
         feature_points->header.frame_id = "world";
 
         vector<set<int>> hash_ids(NUM_OF_CAM);
@@ -1001,10 +740,9 @@ void img_callback(const cv::Mat &show_img, const ros::Time timestamp)
                     p.x = un_pts[j].x;
                     p.y = un_pts[j].y;
                     p.z = 1;
-		  //  ROS_INFO_STREAM("p.x:"<<p.x<<" p.y:"<<p.y);
+
                     feature_points->points.push_back(p);
                     id_of_point.values.push_back(p_id * NUM_OF_CAM + i);
-		     //   ROS_INFO_STREAM("cur_pts[j].x: " << cur_pts[j].x << " cur_pts[j].y: " << cur_pts[j].y);
                     u_of_point.values.push_back(cur_pts[j].x);
                     v_of_point.values.push_back(cur_pts[j].y);
                     ROS_ASSERT(inBorder(cur_pts[j]));
@@ -1031,23 +769,20 @@ void img_callback(const cv::Mat &show_img, const ros::Time timestamp)
                 }
             }
         }
-    
         feature_points->channels.push_back(id_of_point);
         feature_points->channels.push_back(u_of_point);
         feature_points->channels.push_back(v_of_point);
-	//while(1);
   //      ROS_INFO("publish %f, at %f", feature_points->header.stamp.toSec(), ros::Time::now().toSec());
      //   pub_img.publish(feature_points);
-	//ROS_INFO_STREAM("feature_points size: "<< feature_points->points.size() << "feature_points->header.stamp: " << feature_points->header.stamp);
         feature_callback(feature_points);          //add
 	
 
         if (SHOW_TRACK)
         {
-	    //ptr = cv_bridge::cvtColor(ptr, sensor_msgs::image_encodings::BGR8);
+     //       ptr = cv_bridge::cvtColor(ptr, sensor_msgs::image_encodings::BGR8);
 
             //cv::Mat stereo_img(ROW * NUM_OF_CAM, COL, CV_8UC3);
-	    //cv::Mat stereo_img = ptr->image;
+      //      cv::Mat stereo_img = ptr->image;
 	    cv::Mat stereo_img;
             for (int i = 0; i < NUM_OF_CAM; i++)
             {
@@ -1086,8 +821,6 @@ void img_callback(const cv::Mat &show_img, const ros::Time timestamp)
 
     }
   //  ROS_INFO("whole feature tracker processing costs: %f", t_r.toc());
-  
-
    
 }
 /******************* load image begin ***********************/
@@ -1126,9 +859,9 @@ void LoadImus(ifstream & fImus, const ros::Time &imageTimestamp)
 	getline(fImus,s);
 	if(!s.empty())
 	{
-	    char c = s.at(0);
-	    if(c<'0' || c>'9')      //remove first line in data.csv
-	       continue;       
+	   char c = s.at(0);
+ 	   if(c<'0' || c>'9')      //remove first line in data.csv
+		       continue;       
 	    stringstream ss;
 	    ss << s;
 	    double tmpd;
@@ -1151,25 +884,13 @@ void LoadImus(ifstream & fImus, const ros::Time &imageTimestamp)
 	    imudata->linear_acceleration.x = data[4];
 	    imudata->linear_acceleration.y = data[5];
 	    imudata->linear_acceleration.z = data[6];
-	   
-	    uint32_t  sec = data[0];
-	    uint32_t nsec = (data[0]-sec)*1e9;
-	    nsec = (nsec/1000)*1000+500;
-	  //  TimestampEffectiveBitAdjust(data[0]);
-	     imudata->header.stamp = ros::Time(sec, nsec);
-	  //  ROS_INFO_STREAM("imudata timestamp" << data[0] << " "<< imudata->angular_velocity.x << " "<< imudata->angular_velocity.y << " "<<imudata->angular_velocity.z<< " "  \
-						<<imudata->linear_acceleration.x<< " "<<imudata->linear_acceleration.y<< " "<<imudata->linear_acceleration.z);
-	  //  ROS_INFO_STREAM("imudata timestamp" << data[0]);
-	 //  cout  <<"Image timestamp: "<<  setiosflags(ios::fixed) << imageTimestamp << endl;
-	// ROS_INFO_STREAM( "imudata timestamp: " <<  imudata->header.stamp << " Image timestamp:" <<ros::Time(imageTimestamp));
-	  //  cout  <<"imudata timestamp: "<<  setiosflags(ios::fixed) << data[0] << endl;
+		uint32_t  sec = data[0];
+		uint32_t nsec = (data[0]-sec)*1e9;
+		nsec = (nsec/1000)*1000+500;
+	    imudata->header.stamp = ros::Time(sec,nsec);
 	    imu_callback(imudata);
-	    if (imudata->header.stamp>imageTimestamp)       //load all imu data produced in interval time between two consecutive frams 
-	    {
-	    //  ROS_INFO_STREAM( "imudata timestamp: " << imudata->header.stamp << " Image timestamp:" <<ros::Time(imageTimestamp));
-	    // cout  <<"Image timestamp: "<<  setiosflags(ios::fixed) << imageTimestamp << endl;
+	    if (imudata->header.stamp > imageTimestamp)       //load all imu data produced in interval time between two consecutive frams 
 	      break;
-	    }
 	}
     }
 }
@@ -1177,24 +898,12 @@ void LoadImus(ifstream & fImus, const ros::Time &imageTimestamp)
 
 int main(int argc, char **argv)
 {
-    signal(SIGINT, sigint_function);
-
   /******************* load image begin ***********************/
     if(argc != 5)
     {
 	cerr << endl << "Usage: ./vins_estimator path_to_setting_file path_to_image_folder path_to_times_file path_to_imu_data_file" <<endl;
 	return 1;
     }
-    
-    //imu data file 
-    ifstream fImus;
-    fImus.open(argv[4]);
- 
-     cv::Mat image;
-    int ni;//num image
-    
-    vector<string> vStrImagesFileNames;
-    vector<double> vTimeStamps;
     ros::init(argc, argv, "vins_estimator");
     ros::NodeHandle n("~");
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
@@ -1203,16 +912,19 @@ int main(int argc, char **argv)
     readParameters(argv[1]);
     
     estimator.setParameter();
-    for (int i = 0; i < NUM_OF_CAM; i++)
-        trackerData[i].readIntrinsicParameter(CAM_NAMES[i]); //add 
 #ifdef EIGEN_DONT_PARALLELIZE
     ROS_DEBUG("EIGEN_DONT_PARALLELIZE");
 #endif
     ROS_WARN("waiting for image and imu...");
     
 
-    registerPub(n);
 
+    for (int i = 0; i < NUM_OF_CAM; i++)
+        trackerData[i].readIntrinsicParameter(CAM_NAMES[i]); //add
+
+    registerPub(n);
+    vector<string> vStrImagesFileNames;
+    vector<double> vTimeStamps;
     LoadImages(string(argv[2]),string(argv[3]),vStrImagesFileNames,vTimeStamps);
     
     int imageNum = vStrImagesFileNames.size();
@@ -1222,48 +934,36 @@ int main(int argc, char **argv)
 	cerr << "ERROR: Failed to load images" << endl;
 	return 1;
     }
-
-
+    //imu data file 
+    ifstream fImus;
+    fImus.open(argv[4]);
+    
+    cv::Mat image;
+    int ni;//num image
+    
     std::thread measurement_process{process};
-    measurement_process.detach();
-    if (LOOP_CLOSURE)
-    {
-    
     std::thread loop_detection, pose_graph;
-        loop_detection = std::thread(process_loop_detection);   
-        pose_graph = std::thread(process_pose_graph);
-	//loop_detection.detach();
-	//pose_graph.detach();
-        m_camera = CameraFactory::instance()->generateCameraFromYamlFile(CAM_NAMES_ESTIMATOR);
-    }
-    
-   
-	
-    for(ni=0; ni<imageNum; ni++)
+    if (LOOP_CLOSURE)
+     {     
+		 loop_detection = std::thread(process_loop_detection);   
+		 pose_graph = std::thread(process_pose_graph);
+		 //loop_detection.detach();
+		 //pose_graph.detach();
+		 m_camera = CameraFactory::instance()->generateCameraFromYamlFile(CAM_NAMES_ESTIMATOR);
+	 }
+	for(ni=0; ni<imageNum; ni++)
     {
-//	   printConfigData();
-      if(sigflag)
-		break;
+      
       double  tframe = vTimeStamps[ni];   //timestamp
-      uint32_t  sec = tframe;
+	  uint32_t  sec = tframe;
       uint32_t nsec = (tframe-sec)*1e9;
       nsec = (nsec/1000)*1000+500;
       ros::Time image_timestamp = ros::Time(sec, nsec);
-
-      //cout  <<"Image timestamp: "<<  setiosflags(ios::fixed) << tframe << endl;
-    //  ROS_INFO_STREAM("Image timestamp:" << ros::Time(tframe));
-       // read imu data 
-      LoadImus(fImus,image_timestamp);
+       // read imu data
+       LoadImus(fImus,image_timestamp);
        
 	//read image from file
-     // image = cv::imread(vStrImagesFileNames[ni],CV_LOAD_IMAGE_UNCHANGED);
-     // ROS_INFO_STREAM("image" << image);
-     // while(1);
-      image = cv::imread(vStrImagesFileNames[ni],CV_LOAD_IMAGE_GRAYSCALE);
-    //  ROS_INFO_STREAM("image" << image);
-  //    static int image_count = 0;
-   //   if(++image_count>=2)
-//	while(1);
+      image = cv::imread(vStrImagesFileNames[ni],CV_LOAD_IMAGE_UNCHANGED);
       
       if(image.empty())
       {
@@ -1272,11 +972,11 @@ int main(int argc, char **argv)
       }
       std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
       
-
       
-      // process image
+      //TODO process image
       img_callback(image, image_timestamp);
-//	process();
+      
+      
       std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
       
       double timeSpent =std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1).count();
@@ -1284,84 +984,16 @@ int main(int argc, char **argv)
       //wait to load the next frame image
       double T=0;
       if(ni < imageNum-1)
-		T = vTimeStamps[ni+1]-tframe; //interval time between two consecutive frames,unit:second
+	T = vTimeStamps[ni+1]-tframe; //interval time between two consecutive frames,unit:second
       else if(ni>0)    //lastest frame
-		T = tframe-vTimeStamps[ni-1];
-      ROS_INFO_STREAM("timespent:" << timeSpent << " T:" << T);
+	T = tframe-vTimeStamps[ni-1];
+      
       if(timeSpent < T)
-      {
-		usleep((T-timeSpent)*1e6); //sec->us:1e6
-		ROS_INFO_STREAM("usleep time:" << (T-timeSpent)*1e6);
-      }
+	usleep((T-timeSpent)*1e6); //sec->us:1e6
       else
-		cerr << endl << "process image speed too slow, larger than interval time between two consecutive frames" << endl;
+	cerr << endl << "process image speed too slow, larger than interval time between two consecutive frames" << endl;
+      
     }
-    if(ni<imageNum)
-    cout << "for loop error" <<endl;
-    
- return 0;
-}
-
 /******************* load image end ***********************/
-  
-  
-#if 0 
- int main(int argc, char **argv)
-{
-    ros::init(argc, argv, "vins_estimator");
-    ros::NodeHandle n("~");
-    ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
-  
-    readParameters(n);
-    estimator.setParameter();
-#ifdef EIGEN_DONT_PARALLELIZE
-    ROS_DEBUG("EIGEN_DONT_PARALLELIZE");
-#endif
-    ROS_WARN("waiting for image and imu...");
-
-    registerPub(n);
-    
-
-
-    ros::Subscriber sub_imu = n.subscribe(IMU_TOPIC, 2000, imu_callback, ros::TransportHints().tcpNoDelay());
-    //ros::Subscriber sub_image = n.subscribe("/feature_tracker/feature", 2000, feature_callback);
-    ros::Subscriber sub_raw_image = n.subscribe(IMAGE_TOPIC, 2000, raw_image_callback);
-
-   // std::thread measurement_process{process};
-    std::thread loop_detection, pose_graph;
-    if (LOOP_CLOSURE)
-    {
-        ROS_WARN("LOOP_CLOSURE true");
-        loop_detection = std::thread(process_loop_detection);   
-        pose_graph = std::thread(process_pose_graph);
-        m_camera = CameraFactory::instance()->generateCameraFromYamlFile(CAM_NAMES_ESTIMATOR);
-    }
-/*************************feature_tracker section begin*****************************/
-     readFeatureTrackParameters(n);
-
-    for (int i = 0; i < NUM_OF_CAM; i++)
-        trackerData[i].readIntrinsicParameter(CAM_NAMES[i]); //add
-
-    if(FISHEYE)
-    {
-        for (int i = 0; i < NUM_OF_CAM; i++)
-        {
-            trackerData[i].fisheye_mask = cv::imread(FISHEYE_MASK, 0);
-            if(!trackerData[i].fisheye_mask.data)
-            {
-                ROS_INFO("load mask fail");
-                ROS_BREAK();
-            }
-            else
-                ROS_INFO("load mask success");
-        }
-    }
-
-    ros::Subscriber sub_img = n.subscribe(IMAGE_TOPIC, 100, img_callback);
-    pub_match = n.advertise<sensor_msgs::Image>("feature_img",1000);
-/*************************feature_tracker section end*****************************/
-    ros::spin();
-
     return 0;
 }
-#endif

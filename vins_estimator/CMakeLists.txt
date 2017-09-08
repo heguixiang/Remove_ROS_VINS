@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(vins_estimator)
 
-#set(CMAKE_BUILD_TYPE "Release")
-set(CMAKE_BUILD_TYPE "Debug")
+set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_FLAGS "-std=c++11")
 #-DEIGEN_USE_MKL_ALL")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g")
@@ -60,6 +59,7 @@ add_executable(vins_estimator
     src/loop-closure/keyframe.cpp
     src/loop-closure/keyframe_database.cpp
     src/feature_tracker/feature_tracker.cpp 
+    src/feature_tracker/feature_tracker_parameters.cpp
     )
 
 

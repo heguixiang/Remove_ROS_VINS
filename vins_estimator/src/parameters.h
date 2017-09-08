@@ -11,7 +11,7 @@
 using namespace std;
 
 //const double FOCAL_LENGTH = 460.0;
-//extern int FOCAL_LENGTH; //add
+extern int FOCAL_LENGTH; //add
 const int WINDOW_SIZE = 10;
 const int NUM_OF_CAM = 1;
 const int NUM_OF_F = 1000;
@@ -20,7 +20,6 @@ const double LOOP_INFO_VALUE = 50.0;
 //#define GT
 #define UNIT_SPHERE_ERROR
 
-extern void printConfigData( void);
 extern double INIT_DEPTH;
 extern double MIN_PARALLAX;
 extern int ESTIMATE_EXTRINSIC;
@@ -52,7 +51,7 @@ extern std::string IMU_TOPIC;
 //feature tracker section
 extern int ROW;
 extern int COL;
-extern double FOCAL_LENGTH;
+extern int FOCAL_LENGTH;
 //const int NUM_OF_CAM = 1;
 
 
