@@ -1,5 +1,6 @@
 #include "initial_alignment.h"
-
+#include <iostream>
+using namespace std;
 void solveGyroscopeBias(map<double, ImageFrame> &all_image_frame, Vector3d* Bgs)
 {
     Matrix3d A;
@@ -17,15 +18,18 @@ void solveGyroscopeBias(map<double, ImageFrame> &all_image_frame, Vector3d* Bgs)
         VectorXd tmp_b(3);
         tmp_b.setZero();
         Eigen::Quaterniond q_ij(frame_i->second.R.transpose() * frame_j->second.R);
+	//ROS_INFO_STREAM("frame_j->second.R" << frame_j->second.R);
         tmp_A = frame_j->second.pre_integration->jacobian.template block<3, 3>(O_R, O_BG);
         tmp_b = 2 * (frame_j->second.pre_integration->delta_q.inverse() * q_ij).vec();
         A += tmp_A.transpose() * tmp_A;
         b += tmp_A.transpose() * tmp_b;
-
+	ROS_INFO_STREAM("q_ij:" << q_ij.vec().transpose());
+	//cout << frame_j->second.pre_integration->delta_q.inverse().w << endl;
+	//ROS_INFO_STREAM("q_ij:" << q_ij);
     }
     delta_bg = A.ldlt().solve(b);
     ROS_WARN_STREAM("gyroscope bias initial calibration " << delta_bg.transpose());
-
+    ROS_INFO_STREAM("A: " << A << " b: " << b);
     for (int i = 0; i <= WINDOW_SIZE; i++)
         Bgs[i] += delta_bg;
 

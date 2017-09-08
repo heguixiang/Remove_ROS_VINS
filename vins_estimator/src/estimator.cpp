@@ -100,6 +100,8 @@ void Estimator::processIMU(double dt, const Vector3d &linear_acceleration, const
         Vector3d un_acc = 0.5 * (un_acc_0 + un_acc_1);
         Ps[j] += dt * Vs[j] + 0.5 * dt * dt * un_acc;
         Vs[j] += dt * un_acc;
+	//ROS_INFO_STREAM("RS: " << Rs[j] <<" Ps[j]: " << Ps[j] << "Vs[j]: " << Vs[j]);
+
     }
     acc_0 = linear_acceleration;
     gyr_0 = angular_velocity;
@@ -108,22 +110,24 @@ void Estimator::processIMU(double dt, const Vector3d &linear_acceleration, const
 void Estimator::processImage(const map<int, vector<pair<int, Vector3d>>> &image, const std_msgs::Header &header)
 {
     ROS_DEBUG("new image coming ------------------------------------------");
-    ROS_DEBUG("Adding feature points %lu", image.size());
+    //ROS_INFO("Adding feature points %lu", image.size());
     if (f_manager.addFeatureCheckParallax(frame_count, image))
         marginalization_flag = MARGIN_OLD;
     else
         marginalization_flag = MARGIN_SECOND_NEW;
 
-    ROS_DEBUG("this frame is--------------------%s", marginalization_flag ? "reject" : "accept");
+   // ROS_INFO("this frame is--------------------%s", marginalization_flag ? "reject" : "accept");
     ROS_DEBUG("%s", marginalization_flag ? "Non-keyframe" : "Keyframe");
-    ROS_DEBUG("Solving %d", frame_count);
-    ROS_DEBUG("number of feature: %d", f_manager.getFeatureCount());
+  //  ROS_INFO("Solving %d", frame_count);
+ //   ROS_INFO("number of feature: %d", f_manager.getFeatureCount());
     Headers[frame_count] = header;
 
     ImageFrame imageframe(image, header.stamp.toSec());
     imageframe.pre_integration = tmp_pre_integration;
     all_image_frame.insert(make_pair(header.stamp.toSec(), imageframe));
+   // ROS_INFO_STREAM("acc_0: "<<acc_0 << "gyr_0:" << gyr_0 << "Bas[frame_count]: " << Bas[frame_count] << "Bgs[frame_count]:" << Bgs[frame_count]);
     tmp_pre_integration = new IntegrationBase{acc_0, gyr_0, Bas[frame_count], Bgs[frame_count]};
+   // ROS_INFO_STREAM("acc_0:" << acc_0 << " gyr_0:" << gyr_0 << " Bas:" << Bas[frame_count] << " Bgs:" << Bgs[frame_count] );
 
     if(ESTIMATE_EXTRINSIC == 2)
     {
@@ -261,6 +265,9 @@ bool Estimator::initialStructure()
         ROS_INFO("Not enough features or parallax; Move device around");
         return false;
     }
+    ROS_INFO_STREAM("relative_R" << relative_R);
+    ROS_INFO_STREAM("relative_T" << relative_T);
+    ROS_INFO_STREAM("l" << l);
     GlobalSFM sfm;
     if(!sfm.construct(frame_count + 1, Q, T, l,
               relative_R, relative_T,
@@ -283,6 +290,8 @@ bool Estimator::initialStructure()
         {
             frame_it->second.is_key_frame = true;
             frame_it->second.R = Q[i].toRotationMatrix() * RIC[0].transpose();
+	//    ROS_INFO_STREAM(" Q[i].toRotationMatrix()" <<  Q[i].toRotationMatrix());
+	 //    ROS_INFO_STREAM(" RIC[0].transpose()" <<  RIC[0].transpose());
             frame_it->second.T = T[i];
             i++;
             continue;
@@ -435,6 +444,7 @@ bool Estimator::relativePose(Matrix3d &relative_R, Vector3d &relative_T, int &l)
     for (int i = 0; i < WINDOW_SIZE; i++)
     {
         vector<pair<Vector3d, Vector3d>> corres;
+	ROS_INFO_STREAM("WINDOW_SIZE:" << WINDOW_SIZE);
         corres = f_manager.getCorresponding(i, WINDOW_SIZE);
         if (corres.size() > 20)
         {
@@ -445,6 +455,7 @@ bool Estimator::relativePose(Matrix3d &relative_R, Vector3d &relative_T, int &l)
                 Vector2d pts_0(corres[j].first(0), corres[j].first(1));
                 Vector2d pts_1(corres[j].second(0), corres[j].second(1));
                 double parallax = (pts_0 - pts_1).norm();
+	//	ROS_INFO_STREAM("parallax:" << parallax);
                 sum_parallax = sum_parallax + parallax;
 
             }
@@ -452,7 +463,7 @@ bool Estimator::relativePose(Matrix3d &relative_R, Vector3d &relative_T, int &l)
             if(average_parallax * 460 > 30 && m_estimator.solveRelativeRT(corres, relative_R, relative_T))
             {
                 l = i;
-                ROS_DEBUG("average_parallax %f choose l %d and newest frame to triangulate the whole structure", average_parallax * 460, l);
+           //     ROS_INFO("average_parallax %f choose l %d and newest frame to triangulate the whole structure, corres.size() = %d", average_parallax * 460, l, corres.size());
                 return true;
             }
         }

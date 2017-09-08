@@ -7,6 +7,8 @@
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <iostream>
+using namespace std;
 
 #include "camodocal/gpl/gpl.h"
 
@@ -178,7 +180,9 @@ PinholeCamera::Parameters::readFromYamlFile(const std::string& filename)
     m_fy = static_cast<double>(n["fy"]);
     m_cx = static_cast<double>(n["cx"]);
     m_cy = static_cast<double>(n["cy"]);
-
+  
+    cout << "m_k1:" << m_k1 << " m_k2" << m_k2 << " m_p1:"<<m_p1 << " m_p2:" << m_p2<< endl;
+    cout << "m_fx:" << m_fx << " m_fy" << m_fy << " m_cx:"<<m_cx << " m_cy:" << m_cy<< endl;
     return true;
 }
 
@@ -506,6 +510,7 @@ PinholeCamera::liftProjective(const Eigen::Vector2d& p, Eigen::Vector3d& P) cons
     }
 
     // Obtain a projective ray
+    //cout<<"lift:mx_u:"<<mx_u<<",my_u:"<<my_u<<endl;
     P << mx_u, my_u, 1.0;
 }
 

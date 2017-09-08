@@ -157,6 +157,8 @@ void FeatureTracker::readImage(const cv::Mat &_img)
 
         prev_img = forw_img;
         prev_pts = forw_pts;
+//	ROS_INFO_STREAM("prev_pts" << prev_pts);
+//	while(1);
     }
     cur_img = forw_img;
     cur_pts = forw_pts;
@@ -257,8 +259,11 @@ vector<cv::Point2f> FeatureTracker::undistortedPoints()
     for (unsigned int i = 0; i < cur_pts.size(); i++)
     {
         Eigen::Vector2d a(cur_pts[i].x, cur_pts[i].y);
+	
         Eigen::Vector3d b;
         m_camera->liftProjective(a, b);
+	//ROS_INFO_STREAM("a:" << a);
+	//ROS_INFO_STREAM("b:" << b);
         un_pts.push_back(cv::Point2f(b.x() / b.z(), b.y() / b.z()));
     }
 

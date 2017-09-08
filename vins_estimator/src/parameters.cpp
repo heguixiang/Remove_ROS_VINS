@@ -47,11 +47,48 @@ int STEREO_TRACK;
 int EQUALIZE;
 int ROW;
 int COL;
-int FOCAL_LENGTH;
+double FOCAL_LENGTH;
 int FISHEYE;
 bool PUB_THIS_FRAME;
 
-
+void printConfigData( void)
+{
+   ROS_INFO_STREAM(" INIT_DEPTH:" << INIT_DEPTH);
+   ROS_INFO_STREAM(" MIN_PARALLAX:" << MIN_PARALLAX);
+   ROS_INFO_STREAM("ACC_N:" << ACC_N  << "ACC_W:" << ACC_W );
+   ROS_INFO_STREAM("GYR_N:" << GYR_N  << "GYR_W:" << GYR_W );
+   ROS_INFO_STREAM("RIC.front():" << RIC.front());
+   ROS_INFO_STREAM("TIC.front():" << TIC.front());
+  
+   ROS_INFO_STREAM("BIAS_ACC_THRESHOLD" <<BIAS_ACC_THRESHOLD<< "BIAS_GYR_THRESHOLD" << BIAS_GYR_THRESHOLD);
+   ROS_INFO_STREAM("SOLVER_TIME" <<SOLVER_TIME);
+   ROS_INFO_STREAM("NUM_ITERATIONS" << NUM_ITERATIONS);
+   
+   ROS_INFO_STREAM("ESTIMATE_EXTRINSIC" <<ESTIMATE_EXTRINSIC);
+   ROS_INFO_STREAM("EX_CALIB_RESULT_PATH" << EX_CALIB_RESULT_PATH);
+   ROS_INFO_STREAM("VINS_RESULT_PATH" <<VINS_RESULT_PATH);
+   ROS_INFO_STREAM("MIN_LOOP_NUM" << MIN_LOOP_NUM);
+   ROS_INFO_STREAM("CAM_NAMES_ESTIMATOR" <<CAM_NAMES_ESTIMATOR<< "PATTERN_FILE" << PATTERN_FILE);
+  
+   ROS_INFO_STREAM("VOC_FILE" <<VOC_FILE );
+   ROS_INFO_STREAM("VINS_FOLDER_PATH" << VINS_FOLDER_PATH);
+   ROS_INFO_STREAM("IMAGE_ROW" << IMAGE_ROW << "IMAGE_COL" <<IMAGE_COL);
+   ROS_INFO_STREAM("MAX_KEYFRAME_NUM" <<MAX_KEYFRAME_NUM);
+   ROS_INFO_STREAM( "CAM_NAMES.front()" << CAM_NAMES.front());  
+   ROS_INFO_STREAM("FISHEYE_MASK" <<FISHEYE_MASK);
+   ROS_INFO_STREAM( "MAX_CNT" << MAX_CNT);
+   ROS_INFO_STREAM("MIN_DIST" <<MIN_DIST<< "WINDOW_SIZE_FEATURE_TRACKER" << WINDOW_SIZE_FEATURE_TRACKER);
+ 
+   ROS_INFO_STREAM("FREQ" <<FREQ);
+   ROS_INFO_STREAM( "F_THRESHOLD" << F_THRESHOLD);
+   ROS_INFO_STREAM("SHOW_TRACK" <<SHOW_TRACK<< "STEREO_TRACK" << STEREO_TRACK);
+   ROS_INFO_STREAM("EQUALIZE" <<EQUALIZE<< "ROW" << ROW);
+   ROS_INFO_STREAM("COL" <<COL<< "FOCAL_LENGTH" << FOCAL_LENGTH);
+   ROS_INFO_STREAM("FISHEYE" <<FISHEYE);
+   ROS_INFO_STREAM("PUB_THIS_FRAME" << PUB_THIS_FRAME);
+   
+  
+}
 void readParameters(const string & config_file)
 {
 
@@ -64,11 +101,10 @@ void readParameters(const string & config_file)
 
 
     VINS_FOLDER_PATH = getcwd(NULL,FILENAMEPATH_MAX);
-    fsSettings["output_path"] >> VINS_RESULT_PATH;
 
    
-    fsSettings["image_topic"] >> IMAGE_TOPIC;
-    fsSettings["imu_topic"] >> IMU_TOPIC;
+//    fsSettings["image_topic"] >> IMAGE_TOPIC;
+//    fsSettings["imu_topic"] >> IMU_TOPIC;
 
     IMAGE_COL = fsSettings["image_width"];
     IMAGE_ROW = fsSettings["image_height"];
@@ -76,7 +112,7 @@ void readParameters(const string & config_file)
     SOLVER_TIME = fsSettings["max_solver_time"];
     NUM_ITERATIONS = fsSettings["max_num_iterations"];
     MIN_PARALLAX = fsSettings["keyframe_parallax"];
-    MIN_PARALLAX = MIN_PARALLAX / FOCAL_LENGTH;
+
 
     fsSettings["output_path"] >> VINS_RESULT_PATH;
     VINS_RESULT_PATH = VINS_FOLDER_PATH + VINS_RESULT_PATH;
@@ -107,6 +143,7 @@ void readParameters(const string & config_file)
             ROS_WARN(" Optimize extrinsic param around initial guess!");
             fsSettings["ex_calib_result_path"] >> EX_CALIB_RESULT_PATH;
             EX_CALIB_RESULT_PATH = VINS_FOLDER_PATH + EX_CALIB_RESULT_PATH;
+	    ROS_INFO_STREAM("EX_CALIB_RESULT_PATH" << EX_CALIB_RESULT_PATH);
         }
         if (ESTIMATE_EXTRINSIC == 0)
             ROS_WARN(" fix extrinsic param ");
@@ -131,11 +168,11 @@ void readParameters(const string & config_file)
     {
         fsSettings["voc_file"] >> VOC_FILE;;
         fsSettings["pattern_file"] >> PATTERN_FILE;
-	cout << PATTERN_FILE << endl;
         VOC_FILE = VINS_FOLDER_PATH + VOC_FILE;
         PATTERN_FILE = VINS_FOLDER_PATH + PATTERN_FILE;
         MIN_LOOP_NUM = fsSettings["min_loop_num"];
-        CAM_NAMES_ESTIMATOR = config_file;   //add
+        CAM_NAMES_ESTIMATOR = VINS_FOLDER_PATH + "/"+ config_file;   //add
+	//CAM_NAMES_ESTIMATOR = "/home/solomon/merge_vins_version/src/config/euroc/euroc_config.yaml";
     }
   
 
@@ -151,22 +188,25 @@ void readParameters(const string & config_file)
     MIN_DIST = fsSettings["min_dist"];
     ROW = fsSettings["image_height"];
     COL = fsSettings["image_width"];
-   FREQ = fsSettings["freq"];
+    FREQ = fsSettings["freq"];
     F_THRESHOLD = fsSettings["F_threshold"];
     SHOW_TRACK = fsSettings["show_track"];
-   EQUALIZE = fsSettings["equalize"];
+    EQUALIZE = fsSettings["equalize"];
     FISHEYE = fsSettings["fisheye"];
     if (FISHEYE == 1)
-        FISHEYE_MASK = VINS_FOLDER_PATH + "config/fisheye_mask.jpg";
-    CAM_NAMES.push_back(config_file);
+        FISHEYE_MASK = VINS_FOLDER_PATH + "/src/config/fisheye_mask.jpg";
+    CAM_NAMES.push_back(VINS_FOLDER_PATH + "/" + config_file);
+    //CAM_NAMES.push_back("/home/solomon/merge_vins_version/src/config/euroc/euroc_config.yaml");
 
     WINDOW_SIZE_FEATURE_TRACKER = 20;
     STEREO_TRACK = false;
-    FOCAL_LENGTH = 460;
+    FOCAL_LENGTH = 460.0;
     PUB_THIS_FRAME = false; 
-
+    
+    MIN_PARALLAX = MIN_PARALLAX / FOCAL_LENGTH;
     if (FREQ == 0)
         FREQ = 100;
    
     fsSettings.release();
+    printConfigData();
 }

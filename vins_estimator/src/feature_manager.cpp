@@ -1,5 +1,6 @@
 #include "feature_manager.h"
-
+#include <iostream>
+using namespace std;
 int FeaturePerId::endFrame()
 {
     return start_frame + feature_per_frame.size() - 1;
@@ -52,7 +53,7 @@ bool FeatureManager::addFeatureCheckParallax(int frame_count, const map<int, vec
     for (auto &id_pts : image)
     {
         FeaturePerFrame f_per_fra(id_pts.second[0].second);
-
+	//ROS_INFO_STREAM("f_per_fra.point: " << f_per_fra.point);
         int feature_id = id_pts.first;
         auto it = find_if(feature.begin(), feature.end(), [feature_id](const FeaturePerId &it)
                           {
@@ -70,7 +71,7 @@ bool FeatureManager::addFeatureCheckParallax(int frame_count, const map<int, vec
             last_track_num++;
         }
     }
-
+  
     if (frame_count < 2 || last_track_num < 20)
         return true;
 
@@ -83,15 +84,16 @@ bool FeatureManager::addFeatureCheckParallax(int frame_count, const map<int, vec
             parallax_num++;
         }
     }
-
+ //   while(1);
+  //  ROS_INFO("parallax_num:%d parallax_sum:%lf", parallax_num,parallax_sum);
     if (parallax_num == 0)
     {
         return true;
     }
     else
     {
-        ROS_DEBUG("parallax_sum: %lf, parallax_num: %d", parallax_sum, parallax_num);
-        ROS_DEBUG("current parallax: %lf", parallax_sum / parallax_num * FOCAL_LENGTH);
+     //   ROS_INFO("parallax_sum: %lf, parallax_num: %d", parallax_sum, parallax_num);
+      //  ROS_INFO("current parallax: %lf, MIN_PARALLAX:%lf", parallax_sum / parallax_num, MIN_PARALLAX);
         return parallax_sum / parallax_num >= MIN_PARALLAX;
     }
 }
@@ -379,8 +381,11 @@ double FeatureManager::compensatedParallax2(const FeaturePerId &it_per_id, int f
     double u_i_comp = p_i_comp(0) / dep_i_comp;
     double v_i_comp = p_i_comp(1) / dep_i_comp;
     double du_comp = u_i_comp - u_j, dv_comp = v_i_comp - v_j;
-
+  
     ans = max(ans, sqrt(min(du * du + dv * dv, du_comp * du_comp + dv_comp * dv_comp)));
-
+   // cout <<"p_j"<< setiosflags(ios::fixed)<<p_j << endl;
+  //  cout <<"p_i"<< setiosflags(ios::fixed)<<p_i << endl;
+ //   ROS_INFO_STREAM("frame_j.point:"<<frame_j.point<<" frame_i.point:"<<frame_i.point);
+   //   ROS_INFO_STREAM("ans:" << ans << " du:" << du << " dv:" << du << " du_comp:" << du_comp << " dv_comp:" << dv_comp);
     return ans;
 }
