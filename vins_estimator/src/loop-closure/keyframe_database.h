@@ -10,7 +10,8 @@
 #include "../utility/utility.h"
 #include <nav_msgs/Path.h>
 #include <nav_msgs/Odometry.h>
-#include <geometry_msgs/PointStamped.h>
+//#include <geometry_msgs/PointStamped.h>
+#include "../../include/PointStamped"
 
 class KeyFrameDatabase
 {

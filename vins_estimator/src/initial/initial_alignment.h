@@ -3,9 +3,10 @@
 #include <iostream>
 #include "../factor/imu_factor.h"
 #include "../utility/utility.h"
-#include <ros/ros.h>
+//#include <ros/ros.h>
 #include <map>
 #include "../feature_manager.h"
+#include <iostream>
 
 using namespace Eigen;
 using namespace std;

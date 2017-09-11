@@ -4,8 +4,8 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-#include <ros/ros.h>
-#include <cv_bridge/cv_bridge.h>
+//#include <ros/ros.h>
+//#include <cv_bridge/cv_bridge.h>
 #include <opencv2/opencv.hpp>
 
 #include "estimator.h"
@@ -24,11 +24,14 @@
 /****************** load image section ***********************/
 
 /****************** feature tracker section ***********************/
-#include <sensor_msgs/Image.h>
-#include <sensor_msgs/image_encodings.h>
-#include <sensor_msgs/PointCloud.h>
-#include <sensor_msgs/Imu.h>
-#include <message_filters/subscriber.h>
+//#include <sensor_msgs/Image.h>
+//#include <sensor_msgs/image_encodings.h>
+//#include <sensor_msgs/PointCloud.h>
+//#include <sensor_msgs/Imu.h>
+#include "../../include/PointCloud.h"
+#include "../../include/Imu.h"
+
+//#include <message_filters/subscriber.h>
 #include "feature_tracker/feature_tracker.h"
 
 #define SHOW_UNDISTORTION 0
@@ -37,7 +40,7 @@ vector<uchar> r_status;
 vector<float> r_err;
 
 //ros::Publisher pub_img,pub_match;
-ros::Publisher pub_match;
+//ros::Publisher pub_match;
 
 FeatureTracker trackerData[NUM_OF_CAM];
 double first_image_time;
@@ -158,14 +161,16 @@ getMeasurements()
             return measurements;
         if (!(imu_buf.back()->header.stamp > feature_buf.front()->header.stamp))
         {
-            ROS_WARN("wait for imu, only should happen at the beginning");
+       //     ROS_WARN("wait for imu, only should happen at the beginning");
+	    cout << "WARN: wait for imu, only should happen at the beginning" << endl;
             sum_of_wait++;
             return measurements;
         }
 
         if (!(imu_buf.front()->header.stamp < feature_buf.front()->header.stamp))
         {
-            ROS_WARN("throw img, only should happen at the beginning");
+        //    ROS_WARN("throw img, only should happen at the beginning");
+	    cout << "WARN: throw img, only should happen at the beginning" << endl;
             feature_buf.pop();
             continue;
         }
@@ -243,10 +248,12 @@ void process_loop_detection()
     {
         const char *voc_file = VOC_FILE.c_str();
         TicToc t_load_voc;
-        ROS_DEBUG("loop start loop");
+       // ROS_DEBUG("loop start loop");
+	cout << "loop start loop" << endl;
         cout << "voc file: " << voc_file << endl;
         loop_closure = new LoopClosure(voc_file, IMAGE_COL, IMAGE_ROW);
-        ROS_DEBUG("loop load vocbulary %lf", t_load_voc.toc());
+     //   ROS_DEBUG("loop load vocbulary %lf", t_load_voc.toc());
+	cout << "loop load vocbulary:"<< t_load_voc.toc() << endl;
         loop_closure->initCameraModel(CAM_NAMES_ESTIMATOR);  //add
     }
 
@@ -282,16 +289,21 @@ void process_loop_detection()
             TicToc t_loopdetect;
             loop_succ = loop_closure->startLoopClosure(cur_kf->keypoints, cur_kf->descriptors, cur_pts, old_pts, old_index);
             double t_loop = t_loopdetect.toc();
-            ROS_DEBUG("t_loopdetect %f ms", t_loop);
+            //ROS_DEBUG("t_loopdetect %f ms", t_loop);
+	     cout << "t_loopdetect %f ms" << t_loop << endl;
             if(loop_succ)
             {
                 KeyFrame* old_kf = keyframe_database.getKeyframe(old_index);
                 if (old_kf == NULL)
                 {
-                    ROS_WARN("NO such frame in keyframe_database");
-                    ROS_BREAK();
+                   // ROS_WARN("NO such frame in keyframe_database");
+		  cout << "WARN: NO such frame in keyframe_database" << endl;
+                   // ROS_BREAK();
+		  //break;
+		  continue;
                 }
-                ROS_DEBUG("loop succ %d with %drd image", global_frame_cnt, old_index);
+           //     ROS_DEBUG("loop succ %d with %drd image", global_frame_cnt, old_index);
+		cout << "loop succ " <<global_frame_cnt <<  " with " << old_index << "rd image" << endl;
                 assert(old_index!=-1);
                 
                 Vector3d T_w_i_old, PnP_T_old;
@@ -336,8 +348,8 @@ void process_loop_detection()
 
                     m_update_visualization.lock();
                     keyframe_database.addLoop(old_index);
-                    CameraPoseVisualization* posegraph_visualization = keyframe_database.getPosegraphVisualization();
-                    pubPoseGraph(posegraph_visualization, cur_header);  
+                 //   CameraPoseVisualization* posegraph_visualization = keyframe_database.getPosegraphVisualization();
+                //    pubPoseGraph(posegraph_visualization, cur_header);  
                     m_update_visualization.unlock();
                 }
 
@@ -441,17 +453,18 @@ void process_pose_graph()
             keyframe_database.optimize4DoFLoopPoseGraph(index,
                                                     correct_t,
                                                     correct_r);
-            ROS_DEBUG("t_posegraph %f ms", t_posegraph.toc());
+       //     ROS_DEBUG("t_posegraph %f ms", t_posegraph.toc());
+	    cout << "t_posegraph " <<  t_posegraph.toc() << " ms"<<endl; 
             m_loop_drift.lock();
             relocalize_r = correct_r;
             relocalize_t = correct_t;
             m_loop_drift.unlock();
             m_update_visualization.lock();
             keyframe_database.updateVisualization();
-            CameraPoseVisualization* posegraph_visualization = keyframe_database.getPosegraphVisualization();
+         //   CameraPoseVisualization* posegraph_visualization = keyframe_database.getPosegraphVisualization();
             m_update_visualization.unlock();
-            pubOdometry(estimator, cur_header, relocalize_t, relocalize_r);
-            pubPoseGraph(posegraph_visualization, cur_header); 
+     //       pubOdometry(estimator, cur_header, relocalize_t, relocalize_r);
+        //    pubPoseGraph(posegraph_visualization, cur_header); 
             nav_msgs::Path refine_path = keyframe_database.getPath();
             updateLoopPath(refine_path);
         }
@@ -480,7 +493,8 @@ void process()
                 send_imu(imu_msg);
 
             auto img_msg = measurement.second;
-            ROS_DEBUG("processing vision data with stamp %f \n", img_msg->header.stamp.toSec());
+      //      ROS_DEBUG("processing vision data with stamp %f \n", img_msg->header.stamp.toSec());
+	//    cout << "processing vision data with stamp "<<  img_msg->header.stamp.toSec() << endl;
 
             TicToc t_s;
             map<int, vector<pair<int, Vector3d>>> image;
@@ -555,7 +569,8 @@ void process()
                             KeyFrame* cur_kf = keyframe_database.getKeyframe(estimator.retrive_data_vector[0].cur_index);                            
                             if (abs(estimator.retrive_data_vector[0].relative_yaw) > 30.0 || estimator.retrive_data_vector[0].relative_t.norm() > 20.0)
                             {
-                                ROS_DEBUG("Wrong loop");
+                           //     ROS_DEBUG("Wrong loop");
+			      cout << "Wrong loop" <<endl;
                                 cur_kf->removeLoop();
                             }
                             else 
@@ -571,8 +586,9 @@ void process()
                     }
                 }
             }
-            double whole_t = t_s.toc();
-            printStatistics(estimator, whole_t);
+         //   double whole_t = t_s.toc();
+        //    printStatistics(estimator, whole_t);
+	    cout << "position: " << estimator.Ps[WINDOW_SIZE].transpose() << endl;
             std_msgs::Header header = img_msg->header;
             header.frame_id = "world";
             cur_header = header;
@@ -582,11 +598,11 @@ void process()
                 relocalize_t = estimator.relocalize_t;
                 relocalize_r = estimator.relocalize_r;
             }
-            pubOdometry(estimator, header, relocalize_t, relocalize_r);
-            pubKeyPoses(estimator, header, relocalize_t, relocalize_r);
-            pubCameraPose(estimator, header, relocalize_t, relocalize_r);
-            pubPointCloud(estimator, header, relocalize_t, relocalize_r);
-            pubTF(estimator, header, relocalize_t, relocalize_r);
+         //   pubOdometry(estimator, header, relocalize_t, relocalize_r);
+        //    pubKeyPoses(estimator, header, relocalize_t, relocalize_r);
+        //    pubCameraPose(estimator, header, relocalize_t, relocalize_r);
+        //    pubPointCloud(estimator, header, relocalize_t, relocalize_r);
+       //     pubTF(estimator, header, relocalize_t, relocalize_r);
             m_loop_drift.unlock();
             //ROS_ERROR("end: %f, at %f", img_msg->header.stamp.toSec(), ros::Time::now().toSec());
         }
@@ -633,7 +649,7 @@ void img_callback(const cv::Mat &show_img, const ros::Time &timestamp)
     TicToc t_r;
     for (int i = 0; i < NUM_OF_CAM; i++)
     {
-        ROS_DEBUG("processing camera %d", i);
+       // ROS_DEBUG("processing camera %d", i);
         if (i != 1 || !STEREO_TRACK)
             //trackerData[i].readImage(ptr->image.rowRange(ROW * i, ROW * (i + 1)));
 	  trackerData[i].readImage(show_img.rowRange(ROW * i, ROW * (i + 1)));
@@ -662,7 +678,7 @@ void img_callback(const cv::Mat &show_img, const ros::Time &timestamp)
         r_err.clear();
         TicToc t_o;
         cv::calcOpticalFlowPyrLK(trackerData[0].cur_img, trackerData[1].cur_img, trackerData[0].cur_pts, trackerData[1].cur_pts, r_status, r_err, cv::Size(21, 21), 3);
-        ROS_DEBUG("spatial optical flow costs: %fms", t_o.toc());
+   //     ROS_DEBUG("spatial optical flow costs: %fms", t_o.toc());
         vector<cv::Point2f> ll, rr;
         vector<int> idx;
         for (unsigned int i = 0; i < r_status.size(); i++)
@@ -691,7 +707,7 @@ void img_callback(const cv::Mat &show_img, const ros::Time &timestamp)
             vector<uchar> status;
             TicToc t_f;
             cv::findFundamentalMat(ll, rr, cv::FM_RANSAC, 1.0, 0.5, status);
-            ROS_DEBUG("find f cost: %f", t_f.toc());
+         //   ROS_DEBUG("find f cost: %f", t_f.toc());
             int r_cnt = 0;
             for (unsigned int i = 0; i < status.size(); i++)
             {
@@ -904,25 +920,33 @@ int main(int argc, char **argv)
 	cerr << endl << "Usage: ./vins_estimator path_to_setting_file path_to_image_folder path_to_times_file path_to_imu_data_file" <<endl;
 	return 1;
     }
-    ros::init(argc, argv, "vins_estimator");
-    ros::NodeHandle n("~");
-    ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
+    
+	//imu data file 
+    ifstream fImus;
+    fImus.open(argv[4]);
+    
+    cv::Mat image;
+    int ni;//num image
+    
+	//ros::init(argc, argv, "vins_estimator");
+   // ros::NodeHandle n("~");
+   // ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
     
     //read parameters section
     readParameters(argv[1]);
     
     estimator.setParameter();
-#ifdef EIGEN_DONT_PARALLELIZE
-    ROS_DEBUG("EIGEN_DONT_PARALLELIZE");
-#endif
-    ROS_WARN("waiting for image and imu...");
+    for (int i = 0; i < NUM_OF_CAM; i++)
+        trackerData[i].readIntrinsicParameter(CAM_NAMES[i]); //add
+//#ifdef EIGEN_DONT_PARALLELIZE
+   // ROS_DEBUG("EIGEN_DONT_PARALLELIZE");
+//#endif
+  //  ROS_WARN("waiting for image and imu...");
     
 
 
-    for (int i = 0; i < NUM_OF_CAM; i++)
-        trackerData[i].readIntrinsicParameter(CAM_NAMES[i]); //add
 
-    registerPub(n);
+  //  registerPub(n);
     vector<string> vStrImagesFileNames;
     vector<double> vTimeStamps;
     LoadImages(string(argv[2]),string(argv[3]),vStrImagesFileNames,vTimeStamps);
@@ -934,12 +958,6 @@ int main(int argc, char **argv)
 	cerr << "ERROR: Failed to load images" << endl;
 	return 1;
     }
-    //imu data file 
-    ifstream fImus;
-    fImus.open(argv[4]);
-    
-    cv::Mat image;
-    int ni;//num image
     
     std::thread measurement_process{process};
     std::thread loop_detection, pose_graph;

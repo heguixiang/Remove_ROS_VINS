@@ -24,7 +24,8 @@ void solveGyroscopeBias(map<double, ImageFrame> &all_image_frame, Vector3d* Bgs)
 
     }
     delta_bg = A.ldlt().solve(b);
-    ROS_WARN_STREAM("gyroscope bias initial calibration " << delta_bg.transpose());
+  //  ROS_WARN_STREAM("gyroscope bias initial calibration " << delta_bg.transpose());
+    cout << "gyroscope bias initial calibration " << delta_bg.transpose() << endl;
 
     for (int i = 0; i <= WINDOW_SIZE; i++)
         Bgs[i] += delta_bg;
@@ -180,7 +181,8 @@ bool LinearAlignment(map<double, ImageFrame> &all_image_frame, Vector3d &g, Vect
     double s = x(n_state - 1) / 100.0;
     ROS_DEBUG("estimated scale: %f", s);
     g = x.segment<3>(n_state - 4);
-    ROS_DEBUG_STREAM(" result g     " << g.norm() << " " << g.transpose());
+    //ROS_DEBUG_STREAM(" result g     " << g.norm() << " " << g.transpose());
+    cout << " result g     " << g.norm() << " " << g.transpose() <<endl;
     if(fabs(g.norm() - G.norm()) > 1.0 || s < 0)
     {
         return false;
@@ -189,7 +191,8 @@ bool LinearAlignment(map<double, ImageFrame> &all_image_frame, Vector3d &g, Vect
     RefineGravity(all_image_frame, g, x);
     s = (x.tail<1>())(0) / 100.0;
     (x.tail<1>())(0) = s;
-    ROS_DEBUG_STREAM(" refine     " << g.norm() << " " << g.transpose());
+  //  ROS_DEBUG_STREAM(" refine     " << g.norm() << " " << g.transpose());
+    cout << " refine     " << g.norm() << " " << g.transpose() << endl;
     if(s < 0.0 )
         return false;   
     else

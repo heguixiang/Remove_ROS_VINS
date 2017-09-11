@@ -1,0 +1,51 @@
+#ifndef GEOMETRY_MSGS_MESSAGE_POINTSTAMPED_H
+#define GEOMETRY_MSGS_MESSAGE_POINTSTAMPED_H
+
+
+#include <string>
+#include <vector>
+#include <map>
+
+#include "Header.h"
+#include "Point.h"
+
+namespace geometry_msgs
+{
+template <class ContainerAllocator>
+struct PointStamped_
+{
+  typedef PointStamped_<ContainerAllocator> Type;
+
+  PointStamped_()
+    : header()
+    , point()  {
+    }
+  PointStamped_(const ContainerAllocator& _alloc)
+    : header(_alloc)
+    , point(_alloc)  {
+  (void)_alloc;
+    }
+
+
+
+   typedef  ::std_msgs::Header_<ContainerAllocator>  _header_type;
+  _header_type header;
+
+   typedef  ::geometry_msgs::Point_<ContainerAllocator>  _point_type;
+  _point_type point;
+
+
+
+
+  typedef boost::shared_ptr< ::geometry_msgs::PointStamped_<ContainerAllocator> > Ptr;
+  typedef boost::shared_ptr< ::geometry_msgs::PointStamped_<ContainerAllocator> const> ConstPtr;
+
+}; // struct PointStamped_
+
+typedef ::geometry_msgs::PointStamped_<std::allocator<void> > PointStamped;
+
+typedef boost::shared_ptr< ::geometry_msgs::PointStamped > PointStampedPtr;
+typedef boost::shared_ptr< ::geometry_msgs::PointStamped const> PointStampedConstPtr;
+
+}
+#endif
