@@ -7,13 +7,9 @@ set(CMAKE_CXX_FLAGS "-std=c++11")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g")
 
 find_package(catkin REQUIRED COMPONENTS
-    roscpp
-    std_msgs
-    geometry_msgs
-    nav_msgs
-    tf
-    cv_bridge
-    camera_model
+  camera_model
+#  cv_bridge
+   
     )
 
 find_package(OpenCV REQUIRED)
@@ -41,7 +37,7 @@ add_executable(vins_estimator
     src/factor/marginalization_factor.cpp
     src/utility/utility.cpp
     src/utility/visualization.cpp
-    src/utility/CameraPoseVisualization.cpp
+#    src/utility/CameraPoseVisualization.cpp
     src/initial/solve_5pts.cpp
     src/initial/initial_aligment.cpp
     src/initial/initial_sfm.cpp
@@ -59,7 +55,7 @@ add_executable(vins_estimator
     src/loop-closure/keyframe.cpp
     src/loop-closure/keyframe_database.cpp
     src/feature_tracker/feature_tracker.cpp 
-    src/feature_tracker/feature_tracker_parameters.cpp
+  #  src/feature_tracker/feature_tracker_parameters.cpp
     )
 
 

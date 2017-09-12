@@ -179,7 +179,7 @@ bool LinearAlignment(map<double, ImageFrame> &all_image_frame, Vector3d &g, Vect
     b = b * 1000.0;
     x = A.ldlt().solve(b);
     double s = x(n_state - 1) / 100.0;
-    ROS_DEBUG("estimated scale: %f", s);
+  //  ROS_DEBUG("estimated scale: %f", s);
     g = x.segment<3>(n_state - 4);
     //ROS_DEBUG_STREAM(" result g     " << g.norm() << " " << g.transpose());
     cout << " result g     " << g.norm() << " " << g.transpose() <<endl;

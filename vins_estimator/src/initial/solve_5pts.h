@@ -8,7 +8,7 @@ using namespace std;
 #include <eigen3/Eigen/Dense>
 using namespace Eigen;
 
-#include <ros/console.h>
+//#include <ros/console.h>
 
 class MotionEstimator
 {

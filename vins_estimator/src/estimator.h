@@ -12,7 +12,7 @@
 //#include <std_msgs/Float32.h>
 #include "../../include/Header.h"
 #include "../../include/Float32.h"
-
+#include <assert.h>
 #include <ceres/ceres.h>
 #include "factor/imu_factor.h"
 #include "factor/pose_local_parameterization.h"

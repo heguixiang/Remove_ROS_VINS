@@ -1,5 +1,5 @@
 #include "marginalization_factor.h"
-
+using namespace std;
 void ResidualBlockInfo::Evaluate()
 {
     residuals.resize(cost_function->num_residuals());
@@ -249,8 +249,10 @@ void MarginalizationInfo::marginalize()
         int ret = pthread_create( &tids[i], NULL, ThreadsConstructA ,(void*)&(threadsstruct[i]));
         if (ret != 0)
         {
-            ROS_WARN("pthread_create error");
-            ROS_BREAK();
+        //    ROS_WARN("pthread_create error");
+         //   ROS_BREAK();
+	  cout << "WARN: pthread_create error" << endl;
+	  break;
         }
     }
     for( int i = NUM_THREADS - 1; i >= 0; i--)  

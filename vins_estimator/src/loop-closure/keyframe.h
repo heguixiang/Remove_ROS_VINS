@@ -1,7 +1,7 @@
 #ifndef __KEY_FRAME_
 #define __KEY_FRAME_
 
-#include <ros/ros.h>
+//#include <ros/ros.h>
 #include <eigen3/Eigen/Dense>
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>

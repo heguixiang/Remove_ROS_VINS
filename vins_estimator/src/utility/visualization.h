@@ -1,6 +1,17 @@
 #pragma once
 
-#include <ros/ros.h>
+#include <eigen3/Eigen/Dense>
+#include "../estimator.h"
+#include "../parameters.h"
+#include "../../include/Vector3.h"
+#include "../../include/Quaternion.h"
+#include <fstream>
+
+
+void pubOdometry(const Estimator &estimator, const std_msgs::Header &header, Eigen::Vector3d loop_correct_t,
+                Eigen::Matrix3d loop_correct_r);
+//#include <ros/ros.h>
+#if 0
 #include <std_msgs/Header.h>
 #include <std_msgs/Float32.h>
 #include <sensor_msgs/Imu.h>
@@ -59,3 +70,4 @@ void updateLoopPath(nav_msgs::Path _loop_path);
 
 void pubTF(const Estimator &estimator, const std_msgs::Header &header, Eigen::Vector3d loop_correct_t,
                    Eigen::Matrix3d loop_correct_r);
+#endif

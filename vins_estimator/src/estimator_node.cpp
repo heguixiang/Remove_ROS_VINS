@@ -24,14 +24,9 @@
 /****************** load image section ***********************/
 
 /****************** feature tracker section ***********************/
-//#include <sensor_msgs/Image.h>
-//#include <sensor_msgs/image_encodings.h>
-//#include <sensor_msgs/PointCloud.h>
-//#include <sensor_msgs/Imu.h>
 #include "../../include/PointCloud.h"
 #include "../../include/Imu.h"
 
-//#include <message_filters/subscriber.h>
 #include "feature_tracker/feature_tracker.h"
 
 #define SHOW_UNDISTORTION 0
@@ -290,7 +285,7 @@ void process_loop_detection()
             loop_succ = loop_closure->startLoopClosure(cur_kf->keypoints, cur_kf->descriptors, cur_pts, old_pts, old_index);
             double t_loop = t_loopdetect.toc();
             //ROS_DEBUG("t_loopdetect %f ms", t_loop);
-	     cout << "t_loopdetect %f ms" << t_loop << endl;
+	    // cout << "t_loopdetect %f ms" << t_loop << endl;
             if(loop_succ)
             {
                 KeyFrame* old_kf = keyframe_database.getKeyframe(old_index);
@@ -303,7 +298,7 @@ void process_loop_detection()
 		  continue;
                 }
            //     ROS_DEBUG("loop succ %d with %drd image", global_frame_cnt, old_index);
-		cout << "loop succ " <<global_frame_cnt <<  " with " << old_index << "rd image" << endl;
+		//cout << "loop succ " <<global_frame_cnt <<  " with " << old_index << "rd image" << endl;
                 assert(old_index!=-1);
                 
                 Vector3d T_w_i_old, PnP_T_old;
@@ -463,10 +458,10 @@ void process_pose_graph()
             keyframe_database.updateVisualization();
          //   CameraPoseVisualization* posegraph_visualization = keyframe_database.getPosegraphVisualization();
             m_update_visualization.unlock();
-     //       pubOdometry(estimator, cur_header, relocalize_t, relocalize_r);
+            pubOdometry(estimator, cur_header, relocalize_t, relocalize_r);
         //    pubPoseGraph(posegraph_visualization, cur_header); 
-            nav_msgs::Path refine_path = keyframe_database.getPath();
-            updateLoopPath(refine_path);
+            //nav_msgs::Path refine_path = keyframe_database.getPath();
+//            updateLoopPath(refine_path);
         }
 
         std::chrono::milliseconds dura(5000);
@@ -506,7 +501,8 @@ void process()
                 double x = img_msg->points[i].x;
                 double y = img_msg->points[i].y;
                 double z = img_msg->points[i].z;
-                ROS_ASSERT(z == 1);
+                //ROS_ASSERT(z == 1);
+		assert(z == 1);
                 image[feature_id].emplace_back(camera_id, Vector3d(x, y, z));
             }
             estimator.processImage(image, img_msg->header);
@@ -598,7 +594,7 @@ void process()
                 relocalize_t = estimator.relocalize_t;
                 relocalize_r = estimator.relocalize_r;
             }
-         //   pubOdometry(estimator, header, relocalize_t, relocalize_r);
+            pubOdometry(estimator, header, relocalize_t, relocalize_r);
         //    pubKeyPoses(estimator, header, relocalize_t, relocalize_r);
         //    pubCameraPose(estimator, header, relocalize_t, relocalize_r);
         //    pubPointCloud(estimator, header, relocalize_t, relocalize_r);
@@ -761,7 +757,8 @@ void img_callback(const cv::Mat &show_img, const ros::Time &timestamp)
                     id_of_point.values.push_back(p_id * NUM_OF_CAM + i);
                     u_of_point.values.push_back(cur_pts[j].x);
                     v_of_point.values.push_back(cur_pts[j].y);
-                    ROS_ASSERT(inBorder(cur_pts[j]));
+                 //   ROS_ASSERT(inBorder(cur_pts[j]));
+		    assert(inBorder(cur_pts[j]));
                 }
             }
             else if (STEREO_TRACK)

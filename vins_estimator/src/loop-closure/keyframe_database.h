@@ -6,11 +6,13 @@
 #include <assert.h>
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
-#include "../utility/CameraPoseVisualization.h"
+//#include "../utility/CameraPoseVisualization.h"
 #include "../utility/utility.h"
-#include <nav_msgs/Path.h>
-#include <nav_msgs/Odometry.h>
+//#include <nav_msgs/Path.h>
+//#include <nav_msgs/Odometry.h>
 //#include <geometry_msgs/PointStamped.h>
+#include "../../include/Path.h"
+#include "../../include/Odometry.h"
 #include "../../include/PointStamped"
 
 class KeyFrameDatabase
@@ -29,7 +31,7 @@ public:
 	void updateVisualization();
 	void addLoop(int loop_index);
 	nav_msgs::Path getPath();
-	CameraPoseVisualization* getPosegraphVisualization();
+	//CameraPoseVisualization* getPosegraphVisualization();
 	
 private:
 	list<KeyFrame*> keyFrameList;
@@ -44,7 +46,7 @@ private:
 	double total_length;
 	Vector3d last_P;
 	nav_msgs::Path refine_path;
-	CameraPoseVisualization* posegraph_visualization;
+	//CameraPoseVisualization* posegraph_visualization;
 };
 
 template <typename T>

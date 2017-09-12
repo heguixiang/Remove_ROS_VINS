@@ -65,7 +65,7 @@ g_norm: 9.81007     # gravity magnitude
 
 
 #loop closure parameters
-loop_closure: 0   #if you want to use loop closure to minimize the drift, set loop_closure true and give your brief pattern file path and vocabulary file path accordingly;
+loop_closure: 1   #if you want to use loop closure to minimize the drift, set loop_closure true and give your brief pattern file path and vocabulary file path accordingly;
                      #also give the camera calibration file same as feature_tracker node
 pattern_file: "/src/support_files/brief_pattern.yml"
 voc_file: "/src/support_files/brief_k10L6.bin"

@@ -98,12 +98,41 @@ namespace  ros //DataStucture
     explicit TimeBase(double t) { fromSec(t); }
     ~TimeBase() {}
   
-    bool operator==(const T &rhs) const;
+    bool operator==(const T &rhs) const
+    {return sec == rhs.sec && nsec == rhs.nsec;}
     inline bool operator!=(const T &rhs) const { return !(*static_cast<const T*>(this) == rhs); }
-    bool operator>(const T &rhs) const;
-    bool operator<(const T &rhs) const;
-    bool operator>=(const T &rhs) const;
-    bool operator<=(const T &rhs) const;
+    bool operator>(const T &rhs) const
+    {
+     if(sec > rhs.sec)
+       return true;
+     else if(sec==rhs.sec && nsec > rhs.nsec)
+       return true;
+     return false;
+    }
+    bool operator<(const T &rhs) const
+    {
+     if(sec < rhs.sec)
+       return true;
+     else if(sec==rhs.sec && nsec < rhs.nsec)
+       return true;
+     return false;
+    }
+    bool operator>=(const T &rhs) const
+    {
+     if(sec > rhs.sec)
+       return true;
+     else if(sec==rhs.sec && nsec >= rhs.nsec)
+       return true;
+     return false;
+    }
+    bool operator<=(const T &rhs) const
+     {
+     if(sec < rhs.sec)
+       return true;
+     else if(sec==rhs.sec && nsec <= rhs.nsec)
+       return true;
+     return false;
+    }
 
     double toSec()  const { return (double)sec + 1e-9*(double)nsec; };
     T& fromSec(double t) {
