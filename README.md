@@ -12,6 +12,7 @@ How to run:
   2. mkdir -p data/image/MH_01_easy
   3. mkdir -p data/imu/
   4. git clone git@github.com:heguixiang/EuRoc-Timestamps.git
+  
   5. download the EuRoc dataset(e.g. Machine Hall 01)
   6. cp the MH_01_easy/mav0/cam0/data to data/image/MH_01_easy
   7. cp the MH_01_easy/mav0/imu0/data.csv to data/imu/
