@@ -3,8 +3,8 @@
 #include <eigen3/Eigen/Dense>
 #include "../estimator.h"
 #include "../parameters.h"
-#include "../../include/Vector3.h"
-#include "../../include/Quaternion.h"
+#include "../../../include/Vector3.h"
+#include "../../../include/Quaternion.h"
 #include <fstream>
 
 

@@ -6,26 +6,22 @@ set(CMAKE_CXX_FLAGS "-std=c++11")
 #-DEIGEN_USE_MKL_ALL")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g")
 
-find_package(catkin REQUIRED COMPONENTS
-  camera_model
-#  cv_bridge
-   
-    )
+include_directories(${CMAKE_SOURCE_DIR}/../camera_model/include)
+add_library( lib_camera_model STATIC IMPORTED )
+set_target_properties(lib_camera_model PROPERTIES IMPORTED_LOCATION  ${CMAKE_SOURCE_DIR}/../camera_model/build/libcamera_model.a)
 
 find_package(OpenCV REQUIRED)
 
 find_package(Ceres REQUIRED)
 
-include_directories(${catkin_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS})
+include_directories(${CERES_INCLUDE_DIRS})
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(Eigen3  REQUIRED)
 include_directories(
-  ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
 )
 
-catkin_package()
 
 add_executable(vins_estimator
     src/estimator_node.cpp
@@ -59,6 +55,6 @@ add_executable(vins_estimator
     )
 
 
-target_link_libraries(vins_estimator ${catkin_LIBRARIES} ${OpenCV_LIBS} ${CERES_LIBRARIES}) 
+target_link_libraries(vins_estimator lib_camera_model ${OpenCV_LIBS} ${CERES_LIBRARIES}) 
 
 
