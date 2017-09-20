@@ -18,7 +18,7 @@ How to run:
   
   3. mkdir -p data/imu/
   
-  4. git clone git@github.com:heguixiang/EuRoc-Timestamps.git
+  4. cd VINS_Workspace/data & git clone git@github.com:heguixiang/EuRoc-Timestamps.git
   
   5. download the EuRoc dataset(e.g. Machine Hall 01)
   
