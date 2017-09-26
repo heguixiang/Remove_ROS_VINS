@@ -9,6 +9,7 @@ using namespace Eigen;
 class IntegrationBase
 {
   public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     IntegrationBase() = delete;
     IntegrationBase(const Eigen::Vector3d &_acc_0, const Eigen::Vector3d &_gyr_0,
                     const Eigen::Vector3d &_linearized_ba, const Eigen::Vector3d &_linearized_bg)

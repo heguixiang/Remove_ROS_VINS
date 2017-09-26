@@ -25,6 +25,7 @@
 
 struct RetriveData
 {
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     /* data */
     int old_index;
     int cur_index;
@@ -44,6 +45,7 @@ struct RetriveData
 class Estimator
 {
   public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     Estimator();
 
     void setParameter();

@@ -14,6 +14,7 @@ using namespace std;
 class ImageFrame
 {
     public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
         ImageFrame(){};
         ImageFrame(const map<int, vector<pair<int, Vector3d>>>& _points, double _t):points{_points},t{_t},is_key_frame{false}
         {

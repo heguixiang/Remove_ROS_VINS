@@ -15,6 +15,7 @@ using namespace std;
 
 struct SFMFeature
 {
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     bool state;
     int id;
     vector<pair<int,Vector2d>> observation;
@@ -24,6 +25,7 @@ struct SFMFeature
 
 struct ReprojectionError3D
 {
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	ReprojectionError3D(double observed_u, double observed_v)
 		:observed_u(observed_u), observed_v(observed_v)
 		{}
@@ -56,6 +58,7 @@ struct ReprojectionError3D
 class GlobalSFM
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	GlobalSFM();
 	bool construct(int frame_num, Quaterniond* q, Vector3d* T, int l,
 			  const Matrix3d relative_R, const Vector3d relative_T,

@@ -18,6 +18,7 @@
 class KeyFrameDatabase
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	KeyFrameDatabase();
 	void add(KeyFrame* pKF);
 	void downsample(vector<int> &erase_index);
@@ -61,6 +62,7 @@ T NormalizeAngle(const T& angle_degrees) {
 
 class AngleLocalParameterization {
  public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   template <typename T>
   bool operator()(const T* theta_radians, const T* delta_theta_radians,
@@ -88,6 +90,7 @@ void QuaternionInverse(const T q[4], T q_inverse[4])
 
 struct RelativeTError
 {
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	RelativeTError(double t_x, double t_y, double t_z)
 				  :t_x(t_x), t_y(t_y), t_z(t_z){}
 
@@ -126,6 +129,7 @@ struct RelativeTError
 
 struct TError
 {
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	TError(double t_x, double t_y, double t_z)
 				  :t_x(t_x), t_y(t_y), t_z(t_z){}
 
@@ -152,6 +156,7 @@ struct TError
 
 struct RelativeRTError
 {
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	RelativeRTError(double t_x, double t_y, double t_z, double q_w, double q_x, double q_y, double q_z)
 				  :t_x(t_x), t_y(t_y), t_z(t_z), q_w(q_w), q_x(q_x), q_y(q_y), q_z(q_z)
 				  {
@@ -258,6 +263,7 @@ void RotationMatrixRotatePoint(const T R[9], const T t[3], T r_t[3])
 
 struct FourDOFError
 {
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	FourDOFError(double t_x, double t_y, double t_z, double relative_yaw, double pitch_i, double roll_i)
 				  :t_x(t_x), t_y(t_y), t_z(t_z), relative_yaw(relative_yaw), pitch_i(pitch_i), roll_i(roll_i){}
 
@@ -302,6 +308,7 @@ struct FourDOFError
 
 struct FourDOFWeightError
 {
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	FourDOFWeightError(double t_x, double t_y, double t_z, double relative_yaw, double pitch_i, double roll_i)
 				  :t_x(t_x), t_y(t_y), t_z(t_z), relative_yaw(relative_yaw), pitch_i(pitch_i), roll_i(roll_i){
 				  	weight = 5;

@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <iostream>
 #include <queue>
-#include <execinfo.h>
+//#include <execinfo.h>
 #include <csignal>
 
 #include <opencv2/opencv.hpp>
@@ -28,6 +28,7 @@ void reduceVector(vector<int> &v, vector<uchar> status);
 class FeatureTracker
 {
   public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     FeatureTracker();
 
     void readImage(const cv::Mat &_img);

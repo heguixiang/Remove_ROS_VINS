@@ -45,6 +45,7 @@ template<class TDescriptor>
 class FeatureExtractor
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   /**
    * Extracts features
    * @param im image
@@ -65,6 +66,7 @@ template<class TVocabulary, class TDetector, class TDescriptor>
 class demoDetector
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   /**
    * @param vocfile vocabulary file to load

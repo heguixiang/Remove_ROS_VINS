@@ -26,6 +26,7 @@ using namespace std;
 class LoopClosure
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	LoopClosure(const char *voc_file, int _image_w, int _image_h);
 
 	bool startLoopClosure(std::vector<cv::KeyPoint> &keys, std::vector<BRIEF::bitset> &descriptors,

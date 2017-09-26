@@ -22,6 +22,7 @@ using namespace Eigen;
 class BriefExtractor: public FeatureExtractor<FBrief::TDescriptor>
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   virtual void operator()(const cv::Mat &im, const std::vector<cv::Point2f> window_pts,
     vector<cv::KeyPoint> &keys, vector<BRIEF::bitset> &descriptors) const;
   BriefExtractor(const std::string &pattern_file);
@@ -33,6 +34,7 @@ private:
 class KeyFrame
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	KeyFrame(double _header, Eigen::Vector3d _vio_T_w_c, Eigen::Matrix3d _vio_R_w_c, 
 				Eigen::Vector3d _cur_T_w_c, Eigen::Matrix3d _cur_R_w_c,cv::Mat &_image, const char *_brief_pattern_file);
 	void setExtrinsic(Eigen::Vector3d T, Eigen::Matrix3d R);	

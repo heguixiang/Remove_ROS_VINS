@@ -97,6 +97,7 @@ class TemplatedLoopDetector
 {
 public:
   
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   /// Parameters to create a loop detector
   struct Parameters
   {
@@ -288,6 +289,7 @@ protected:
   /// Matching island
   struct tIsland
   {
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     /// Island starting entry
     EntryId first;
     /// Island ending entry
@@ -386,6 +388,7 @@ protected:
   /// Temporal consistency window
   struct tTemporalWindow
   {
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     /// Island matched in the last query
     tIsland last_matched_island;
     /// Last query id

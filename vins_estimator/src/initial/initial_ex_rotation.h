@@ -14,6 +14,7 @@ using namespace Eigen;
 class InitialEXRotation
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	InitialEXRotation();
     bool CalibrationExRotation(vector<pair<Vector3d, Vector3d>> corres, Quaterniond delta_q_imu, Matrix3d &calib_ric_result);
 private:

@@ -18,6 +18,7 @@ using namespace Eigen;
 class FeaturePerFrame
 {
   public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     FeaturePerFrame(const Vector3d &_point)
     {
         z = _point(2);
@@ -35,6 +36,7 @@ class FeaturePerFrame
 class FeaturePerId
 {
   public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     const int feature_id;
     int start_frame;
     vector<FeaturePerFrame> feature_per_frame;
@@ -59,6 +61,7 @@ class FeaturePerId
 class FeatureManager
 {
   public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     FeatureManager(Matrix3d _Rs[]);
 
     void setRic(Matrix3d _ric[]);

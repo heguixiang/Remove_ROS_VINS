@@ -19,7 +19,12 @@ struct Node {
     int32_t nodeId;
     int32_t parentId;
     double weight;
-    uint64_t descriptor[4];
+#if (__SIZEOF_PTRDIFF_T__ == 8)
+  uint64_t descriptor[4];
+#elif (__SIZEOF_PTRDIFF_T__ == 4)
+  uint32_t descriptor[8];
+#endif
+	//uint8_t descriptor[32]; //solomon modified for debug 32 bit system compatibility issue(boost::dynamic_bitset size()!= rhs.size() issue)
 };
 
 struct Word {

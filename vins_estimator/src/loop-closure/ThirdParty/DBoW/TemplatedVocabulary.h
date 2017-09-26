@@ -24,7 +24,7 @@
 #include "ScoringObject.h"
 
 #include "../DUtils/DUtils.h"
-
+#include <iostream>
 // Added by VINS [[[
 #include "../VocabularyBinary.hpp"
 #include <boost/dynamic_bitset.hpp>
@@ -1538,16 +1538,20 @@ void TemplatedVocabulary<TDescriptor,F>::loadBin(const std::string &filename) {
     m_nodes[pid].children.push_back(nid);
       
     // Sorry to break template here
-    m_nodes[nid].descriptor = boost::dynamic_bitset<>(voc.nodes[i].descriptor, voc.nodes[i].descriptor + 4);
-    
-    if (i < 5) {
+
+#if (__SIZEOF_PTRDIFF_T__ == 8)
+    m_nodes[nid].descriptor = boost::dynamic_bitset<>(voc.nodes[i].descriptor,voc.nodes[i].descriptor + 4); //solomon modified for debug 32 bit system compatibility issue(boost::dynamic_bitset size()!= rhs.size() issue)
+
+#elif (__SIZEOF_PTRDIFF_T__ == 4)
+    m_nodes[nid].descriptor = boost::dynamic_bitset<>(voc.nodes[i].descriptor,voc.nodes[i].descriptor + 8); //solomon modified for debug 32 bit system compatibility issue(boost::dynamic_bitset size()!= rhs.size() issue)
+#endif
+
+	if (i < 2) {
       std::string test;
       boost::to_string(m_nodes[nid].descriptor, test);
       //cout << "descriptor[" << i << "] = " << test << endl;
     }
   }
-  
-  // words
   m_words.resize(voc.nWords);
 
   for(unsigned int i = 0; i < voc.nWords; ++i)
