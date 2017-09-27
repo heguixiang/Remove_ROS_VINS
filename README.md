@@ -1,6 +1,9 @@
-# This  repositories is a version of HKUST-Aerial-Robotics/VINS-Mono without ROS mechanism. There is no ui interface, the project can be passed on the euroc dataset so far.( EuRoc Dataset: http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets ASL data format)
+# This  repositories is a version of HKUST-Aerial-Robotics/VINS-Mono without ROS mechanism. There is no ui interface, the project can be passed on the euroc dataset so far. [EuRoc](http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets) ASL data format, this version can run both on 32bit OS and 64 bit OS platform.
 
-How to build:
+# thanks to the reference program： 
+# [HKUST-Aerial-Robotics/VINS-Mono](https://github.com/HKUST-Aerial-Robotics/VINS-Mono)
+
+# How to build:
   1. mkdir VINS_Workspace
   
   2. cd VINS_Workspace
@@ -11,7 +14,7 @@ How to build:
   
   5. ./generate.sh
  
-How to run:
+# How to run:
   1. cd VINS_Workspace
   
   2. mkdir -p data/image/MH_01_easy
@@ -20,7 +23,7 @@ How to run:
   
   4. cd VINS_Workspace/data & git clone git@github.com:heguixiang/EuRoc-Timestamps.git
   
-  5. download the EuRoc dataset(e.g. Machine Hall 01)
+  5. download the EuRoc dataset(e.g. Machine Hall 01)
   
   6. cp the MH_01_easy/mav0/cam0/data to data/image/MH_01_easy
   
