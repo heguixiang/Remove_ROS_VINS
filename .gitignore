@@ -1,4 +1,4 @@
 data.csv
 /.git/
-*/build/
-/vins_estimator/build/
+camera_model/build/
+vins_estimator/build/

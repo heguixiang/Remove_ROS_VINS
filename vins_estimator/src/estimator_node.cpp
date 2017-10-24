@@ -43,7 +43,8 @@ FeatureTracker trackerData[NUM_OF_CAM];
 double first_image_time;
 int pub_count = 1;
 bool first_image_flag = true;
-bool runnnig_flag = true;
+bool running_flag = true;
+bool view_done = false;
 /****************** feature tracker section ***********************/
 
 /****************** load image section ***********************/
@@ -133,7 +134,7 @@ void ViewCameraPose(Eigen::Vector3d loop_correct_t, Eigen::Matrix3d loop_correct
 	//    cout << "M.m[8]:" <<M.m[8] << "M.m[9]:" << M.m[9] << "M.m[10]" << M.m[10] << endl; 	
 	  //  cout << "M.m[12]:" <<M.m[12] << "M.m[13]:" << M.m[13] << "M.m[14]" << M.m[14] << endl; 	
 
-		}
+	}
 	else
 		 M.SetIdentity();
 }
@@ -195,28 +196,31 @@ void visualization()
 					);
 
 // Add named OpenGL viewport to window and provide 3D Handler
-    pangolin::View& d_cam = pangolin::CreateDisplay()
+        pangolin::View& d_cam = pangolin::CreateDisplay()
                     .SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f/768.0f)
-		            .SetHandler(new pangolin::Handler3D(s_cam));
+		    .SetHandler(new pangolin::Handler3D(s_cam));
 	
 	pangolin::OpenGlMatrix Twc;
 	Twc.SetIdentity();
-	while(!pangolin::ShouldQuit() && runnnig_flag)
+	while(!pangolin::ShouldQuit() & running_flag)
 	{
+	  
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		ViewCameraPose(relocalize_t, relocalize_r, Twc);
-		if(menuFollowCamera)
-	    	s_cam.Follow(Twc);
+	        if(menuFollowCamera)
+		   s_cam.Follow(Twc);
 		d_cam.Activate(s_cam);
-		DrawCurrentCamera(Twc);
-	//	glClearColor(1.0f,1.0f,1.0f,1.0f); //背景色设置为黑色
 		glClearColor(0.0f,0.0f,0.0f,0.0f); //背景色设置为白色
+		DrawCurrentCamera(Twc);		
 		if(menuShowPoints)
 			keyframe_database.viewPointClouds();
 		if(menuShowPath)
 			keyframe_database.viewPath();
 		pangolin::FinishFrame();
+
 	}
+	cout << "pangolin thread end" << endl;
+    view_done = true;	
 	//exit(1);
 }
 
@@ -1038,17 +1042,18 @@ int main(int argc, char **argv)
     }
     
     std::thread measurement_process{process};
-    std::thread visualization_thread{visualization}; //visualization thread
-    measurement_process.detach();
-    visualization_thread.detach();
-  //  visualization_thread.join();
+    
+     measurement_process.detach();
+   
     std::thread loop_detection, pose_graph;
     if (LOOP_CLOSURE)
      {     
 	loop_detection = std::thread(process_loop_detection);   
 	pose_graph = std::thread(process_pose_graph);
+	std::thread visualization_thread{visualization}; //visualization thread
 	loop_detection.detach();
 	pose_graph.detach();
+        visualization_thread.detach();
 	//loop_detection.join();
 	//pose_graph.join();
 	m_camera = CameraFactory::instance()->generateCameraFromYamlFile(CAM_NAMES_ESTIMATOR);
@@ -1090,7 +1095,9 @@ int main(int argc, char **argv)
 	cerr << endl << "process image speed too slow, larger than interval time between two consecutive frames" << endl;
       
     }
-	runnnig_flag = false;
+	running_flag = false;
+	while(!view_done)     //main thread wait view thread used its data structure
+		usleep(5000);
 /******************* load image end ***********************/
     return 0;
 }
