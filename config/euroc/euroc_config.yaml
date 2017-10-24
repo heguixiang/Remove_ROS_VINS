@@ -71,4 +71,6 @@ pattern_file: "/src/support_files/brief_pattern.yml"
 voc_file: "/src/support_files/brief_k10L6.bin"
 min_loop_num: 25
 
-
+visualLookAtX: 1
+visualLookAtY: 0
+visualLookAtZ: 1

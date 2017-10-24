@@ -108,6 +108,8 @@ include_directories(
 	
 find_package(Boost REQUIRED COMPONENTS filesystem program_options system)
 
+find_package(Pangolin REQUIRED)
+include_directories(${Pangolin_INCLUDE_DIRS})
 
 include_directories(${Boost_INCLUDE_DIRS})
 add_executable(vins_estimator
@@ -156,6 +158,7 @@ add_executable(vins_estimator
 
 target_link_libraries(vins_estimator #lib_camera_model 
 					opencv_calib3d opencv_core opencv_features2d opencv_flann opencv_highgui opencv_imgcodecs opencv_imgproc opencv_ml opencv_objdetect opencv_photo opencv_shape opencv_stitching opencv_superres opencv_video opencv_videoio opencv_videostab opencv_viz   
+					${Pangolin_LIBRARIES}
 					${CERES_LIBRARIES}
 #					suitesparse cxsparse cholmod atlas lapack_atlas
 #					glog

@@ -26,8 +26,10 @@
 /****************** feature tracker section ***********************/
 #include "../../include/PointCloud.h"
 #include "../../include/Imu.h"
-
 #include "feature_tracker/feature_tracker.h"
+
+/************************* visualization ***********************/
+#include <pangolin/pangolin.h>
 
 #define SHOW_UNDISTORTION 0
 
@@ -41,7 +43,7 @@ FeatureTracker trackerData[NUM_OF_CAM];
 double first_image_time;
 int pub_count = 1;
 bool first_image_flag = true;
-
+bool runnnig_flag = true;
 /****************** feature tracker section ***********************/
 
 /****************** load image section ***********************/
@@ -91,7 +93,132 @@ std_msgs::Header cur_header;
 Eigen::Vector3d relocalize_t{Eigen::Vector3d(0, 0, 0)};
 Eigen::Matrix3d relocalize_r{Eigen::Matrix3d::Identity()};
 
+nav_msgs::Path  loop_path;
+void updateLoopPath(nav_msgs::Path _loop_path)
+{
+    loop_path = _loop_path;
+}
+void ViewCameraPose(Eigen::Vector3d loop_correct_t, Eigen::Matrix3d loop_correct_r, pangolin::OpenGlMatrix &M)
+{
+	int idx2 = WINDOW_SIZE - 1;
+	if (estimator.solver_flag == Estimator::SolverFlag::NON_LINEAR)
+	{
+		int i = idx2;
+		Vector3d P = (loop_correct_r * estimator.Ps[i] + loop_correct_t) + (loop_correct_r * estimator.Rs[i]) * estimator.tic[0];
+		//Quaterniond R = Quaterniond((loop_correct_r * estimator.Rs[i]) * estimator.ric[0]);
+		Eigen::Matrix3d R = (loop_correct_r * estimator.Rs[i]) * estimator.ric[0];
 
+		M.m[0] = R(0,0); 
+		M.m[1] = R(1,0); 
+		M.m[2] = R(2,0); 
+		M.m[3] = 0.0; 
+
+		M.m[4] = R(0,1); 
+		M.m[5] = R(1,1); 
+		M.m[6] = R(2,1); 
+		M.m[7] = 0.0; 
+
+		M.m[8] = R(0,2); 
+		M.m[9] = R(1,2); 
+		M.m[10] = R(2,2); 
+		M.m[11] = 0.0; 
+		
+		
+		M.m[12] = P.x(); 
+		M.m[13] = P.y(); 
+		M.m[14] = P.z(); 
+		M.m[15] = 1.0;	
+	//    cout << "M.m[0]:" <<M.m[0] << "M.m[1]:" << M.m[1] << "M.m[2]" << M.m[2] << endl; 	
+	//    cout << "M.m[4]:" <<M.m[4] << "M.m[5]:" << M.m[5] << "M.m[6]" << M.m[6] << endl; 	
+	//    cout << "M.m[8]:" <<M.m[8] << "M.m[9]:" << M.m[9] << "M.m[10]" << M.m[10] << endl; 	
+	  //  cout << "M.m[12]:" <<M.m[12] << "M.m[13]:" << M.m[13] << "M.m[14]" << M.m[14] << endl; 	
+
+		}
+	else
+		 M.SetIdentity();
+}
+void DrawCurrentCamera(pangolin::OpenGlMatrix &Twc)
+{
+	const float &w = 0.08f; //mCameraSize;
+	const float h = w*0.75;
+	const float z = w*0.6;
+
+	glPushMatrix();
+
+#ifdef HAVE_GLES
+	glMultMatrixf(Twc.m);
+#else
+	glMultMatrixd(Twc.m);
+#endif
+
+	glLineWidth(2);  //set line width
+	glColor3f(0.0f,0.0f,1.0f);   //blue
+	glBegin(GL_LINES);           //draw camera 
+	glVertex3f(0,0,0);
+	glVertex3f(w,h,z);
+	glVertex3f(0,0,0);
+	glVertex3f(w,-h,z);
+	glVertex3f(0,0,0);
+	glVertex3f(-w,-h,z);
+	glVertex3f(0,0,0);
+	glVertex3f(-w,h,z);
+
+	glVertex3f(w,h,z);
+	glVertex3f(w,-h,z);
+	glVertex3f(-w,h,z);
+	glVertex3f(-w,-h,z);
+	glVertex3f(-w,h,z);
+	glVertex3f(w,h,z);
+	glVertex3f(-w,-h,z);
+	glVertex3f(w,-h,z);
+	glEnd();
+	glPopMatrix();
+}
+void visualization()
+{
+	float mViewpointX = -0;
+	float mViewpointY = -5;
+	float mViewpointZ = -10;
+	float mViewpointF = 500;
+	pangolin::CreateWindowAndBind("VINS: Map Visualization",1024,768); //create a display window
+	glEnable(GL_DEPTH_TEST); //launch depth test
+	glEnable(GL_BLEND);      //use blend function
+	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA); //set blend alpha value
+	pangolin::CreatePanel("menu").SetBounds(0.0,1.0,0.0,pangolin::Attach::Pix(175)); //new button and menu
+ 	pangolin::Var<bool> menuFollowCamera("menu.Follow Camera", true, true);
+ 	pangolin::Var<bool> menuShowPoints("menu.Show Points", true, true);
+ 	pangolin::Var<bool> menuShowPath("menu.Show Path", true, true);
+   	// Define Camera Render Object (for view / scene browsing)
+	pangolin::OpenGlRenderState s_cam(
+				    pangolin::ProjectionMatrix(1024,768,mViewpointF,mViewpointF,512,389,0.1,1000),
+				    pangolin::ModelViewLookAt(mViewpointX,mViewpointY,mViewpointZ, 0,0,0,VISUALLOOKATX, VISUALLOOKATY, VISUALLOOKATZ)
+					);
+
+// Add named OpenGL viewport to window and provide 3D Handler
+    pangolin::View& d_cam = pangolin::CreateDisplay()
+                    .SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f/768.0f)
+		            .SetHandler(new pangolin::Handler3D(s_cam));
+	
+	pangolin::OpenGlMatrix Twc;
+	Twc.SetIdentity();
+	while(!pangolin::ShouldQuit() && runnnig_flag)
+	{
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		ViewCameraPose(relocalize_t, relocalize_r, Twc);
+		if(menuFollowCamera)
+	    	s_cam.Follow(Twc);
+		d_cam.Activate(s_cam);
+		DrawCurrentCamera(Twc);
+	//	glClearColor(1.0f,1.0f,1.0f,1.0f); //背景色设置为黑色
+		glClearColor(0.0f,0.0f,0.0f,0.0f); //背景色设置为白色
+		if(menuShowPoints)
+			keyframe_database.viewPointClouds();
+		if(menuShowPath)
+			keyframe_database.viewPath();
+		pangolin::FinishFrame();
+	}
+	//exit(1);
+}
 
 
 void predict(const sensor_msgs::ImuConstPtr &imu_msg)
@@ -252,7 +379,7 @@ void process_loop_detection()
         loop_closure->initCameraModel(CAM_NAMES_ESTIMATOR);  //add
     }
 
-    while(LOOP_CLOSURE)
+    while(LOOP_CLOSURE)   
     {
         KeyFrame* cur_kf = NULL; 
         m_keyframe_buf.lock();
@@ -411,7 +538,7 @@ void process_loop_detection()
             //release memory
             cur_kf->image.release();
             global_frame_cnt++;
-
+	 //   cout << "---------keyframe_database.size():" << keyframe_database.size() << endl;
             if (t_loop > 1000 || keyframe_database.size() > MAX_KEYFRAME_NUM)
             {
                 m_keyframedatabase_resample.lock();
@@ -430,7 +557,7 @@ void process_loop_detection()
 //thread: pose_graph optimization
 void process_pose_graph()
 {
-    while(true)
+    while(true)            
     {
         m_posegraph_buf.lock();
         int index = -1;
@@ -448,7 +575,6 @@ void process_pose_graph()
             keyframe_database.optimize4DoFLoopPoseGraph(index,
                                                     correct_t,
                                                     correct_r);
-       //     ROS_DEBUG("t_posegraph %f ms", t_posegraph.toc());
 	    cout << "t_posegraph " <<  t_posegraph.toc() << " ms"<<endl; 
             m_loop_drift.lock();
             relocalize_r = correct_r;
@@ -460,8 +586,8 @@ void process_pose_graph()
             m_update_visualization.unlock();
             pubOdometry(estimator, cur_header, relocalize_t, relocalize_r);
         //    pubPoseGraph(posegraph_visualization, cur_header); 
-            //nav_msgs::Path refine_path = keyframe_database.getPath();
-//            updateLoopPath(refine_path);
+            nav_msgs::Path refine_path = keyframe_database.getPath();
+            updateLoopPath(refine_path);
         }
 
         std::chrono::milliseconds dura(5000);
@@ -472,7 +598,7 @@ void process_pose_graph()
 // thread: visual-inertial odometry
 void process()
 {
-    while (true)
+    while (true) 
     {
         std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointCloudConstPtr>> measurements;
         std::unique_lock<std::mutex> lk(m_buf);
@@ -551,7 +677,7 @@ void process()
                     Matrix3d cur_R;
                     cur_T = relocalize_r * vio_T_w_i + relocalize_t;
                     cur_R = relocalize_r * vio_R_w_i;
-                    KeyFrame* keyframe = new KeyFrame(estimator.Headers[WINDOW_SIZE - 2].stamp.toSec(), vio_T_w_i, vio_R_w_i, cur_T, cur_R, image_buf.front().first, pattern_file);
+                    KeyFrame* keyframe = new KeyFrame(estimator.Headers[WINDOW_SIZE - 2].stamp.toSec(), vio_T_w_i, vio_R_w_i, cur_T, cur_R, image_buf.front().first, pattern_file, relocalize_t, relocalize_r);
                     keyframe->setExtrinsic(estimator.tic[0], estimator.ric[0]);
                     keyframe->buildKeyFrameFeatures(estimator, m_camera);
                     m_keyframe_buf.lock();
@@ -785,53 +911,20 @@ void img_callback(const cv::Mat &show_img, const ros::Time &timestamp)
         feature_points->channels.push_back(id_of_point);
         feature_points->channels.push_back(u_of_point);
         feature_points->channels.push_back(v_of_point);
-  //      ROS_INFO("publish %f, at %f", feature_points->header.stamp.toSec(), ros::Time::now().toSec());
-     //   pub_img.publish(feature_points);
         feature_callback(feature_points);          //add
-	
 
-        if (SHOW_TRACK)
+		/*----------------add ui ---------------------*/
+        cv::Mat tmp_img = show_img.rowRange(0, ROW);
+        cv::cvtColor(show_img, tmp_img, CV_GRAY2RGB);
+        for (unsigned int j = 0; j < trackerData[0].cur_pts.size(); j++)
         {
-     //       ptr = cv_bridge::cvtColor(ptr, sensor_msgs::image_encodings::BGR8);
-
-            //cv::Mat stereo_img(ROW * NUM_OF_CAM, COL, CV_8UC3);
-      //      cv::Mat stereo_img = ptr->image;
-	    cv::Mat stereo_img;
-            for (int i = 0; i < NUM_OF_CAM; i++)
-            {
-                cv::Mat tmp_img = stereo_img.rowRange(i * ROW, (i + 1) * ROW);
-                cv::cvtColor(show_img, tmp_img, CV_GRAY2RGB);
-                if (i != 1 || !STEREO_TRACK)
-                {
-                    for (unsigned int j = 0; j < trackerData[i].cur_pts.size(); j++)
-                    {
-                        double len = std::min(1.0, 1.0 * trackerData[i].track_cnt[j] / WINDOW_SIZE_FEATURE_TRACKER);
-                        cv::circle(tmp_img, trackerData[i].cur_pts[j], 2, cv::Scalar(255 * (1 - len), 0, 255 * len), 2);
-                        //char name[10];
-                        //sprintf(name, "%d", trackerData[i].ids[j]);
-                        //cv::putText(tmp_img, name, trackerData[i].cur_pts[j], cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
-                    }
-                }
-                else
-                {
-                    for (unsigned int j = 0; j < trackerData[i].cur_pts.size(); j++)
-                    {
-                        if (r_status[j])
-                        {
-                            cv::circle(tmp_img, trackerData[i].cur_pts[j], 2, cv::Scalar(0, 255, 0), 2);
-                            cv::line(stereo_img, trackerData[i - 1].cur_pts[j], trackerData[i].cur_pts[j] + cv::Point2f(0, ROW), cv::Scalar(0, 255, 0));
-                        }
-                    }
-                }
-            }
-            /*
-            cv::imshow("vis", stereo_img);
-            cv::waitKey(5);
-            */
-	    
-          //  pub_match.publish(ptr->toImageMsg());
-        }
-
+            double len = std::min(1.0, 1.0 * trackerData[0].track_cnt[j] / WINDOW_SIZE_FEATURE_TRACKER);
+            cv::circle(tmp_img, trackerData[0].cur_pts[j], 2, cv::Scalar(255 * (1 - len), 0, 255 * len), 2);
+		}
+		cv::namedWindow("vins", CV_WINDOW_NORMAL); 
+        cv::imshow("vins", tmp_img);
+        cv::waitKey(5);
+		/*----------------add ui ---------------------*/
     }
   //  ROS_INFO("whole feature tracker processing costs: %f", t_r.toc());
    
@@ -918,16 +1011,12 @@ int main(int argc, char **argv)
 	return 1;
     }
     
-	//imu data file 
+    //imu data file 
     ifstream fImus;
     fImus.open(argv[4]);
     
     cv::Mat image;
     int ni;//num image
-    
-	//ros::init(argc, argv, "vins_estimator");
-   // ros::NodeHandle n("~");
-   // ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
     
     //read parameters section
     readParameters(argv[1]);
@@ -935,16 +1024,8 @@ int main(int argc, char **argv)
     estimator.setParameter();
     for (int i = 0; i < NUM_OF_CAM; i++)
         trackerData[i].readIntrinsicParameter(CAM_NAMES[i]); //add
-//#ifdef EIGEN_DONT_PARALLELIZE
-   // ROS_DEBUG("EIGEN_DONT_PARALLELIZE");
-//#endif
-  //  ROS_WARN("waiting for image and imu...");
     
-
-
-
-  //  registerPub(n);
-    vector<string> vStrImagesFileNames;
+	vector<string> vStrImagesFileNames;
     vector<double> vTimeStamps;
     LoadImages(string(argv[2]),string(argv[3]),vStrImagesFileNames,vTimeStamps);
     
@@ -957,16 +1038,22 @@ int main(int argc, char **argv)
     }
     
     std::thread measurement_process{process};
+    std::thread visualization_thread{visualization}; //visualization thread
+    measurement_process.detach();
+    visualization_thread.detach();
+  //  visualization_thread.join();
     std::thread loop_detection, pose_graph;
     if (LOOP_CLOSURE)
      {     
-		 loop_detection = std::thread(process_loop_detection);   
-		 pose_graph = std::thread(process_pose_graph);
-		 //loop_detection.detach();
-		 //pose_graph.detach();
-		 m_camera = CameraFactory::instance()->generateCameraFromYamlFile(CAM_NAMES_ESTIMATOR);
-	 }
-	for(ni=0; ni<imageNum; ni++)
+	loop_detection = std::thread(process_loop_detection);   
+	pose_graph = std::thread(process_pose_graph);
+	loop_detection.detach();
+	pose_graph.detach();
+	//loop_detection.join();
+	//pose_graph.join();
+	m_camera = CameraFactory::instance()->generateCameraFromYamlFile(CAM_NAMES_ESTIMATOR);
+     }
+    for(ni=0; ni<imageNum; ni++)
     {
       
       double  tframe = vTimeStamps[ni];   //timestamp
@@ -975,7 +1062,7 @@ int main(int argc, char **argv)
       nsec = (nsec/1000)*1000+500;
       ros::Time image_timestamp = ros::Time(sec, nsec);
        // read imu data
-       LoadImus(fImus,image_timestamp);
+      LoadImus(fImus,image_timestamp);
        
 	//read image from file
       image = cv::imread(vStrImagesFileNames[ni],CV_LOAD_IMAGE_UNCHANGED);
@@ -986,14 +1073,8 @@ int main(int argc, char **argv)
 	  return 1;
       }
       std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-      
-      
-      //TODO process image
       img_callback(image, image_timestamp);
-      
-      
       std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
-      
       double timeSpent =std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1).count();
       
       //wait to load the next frame image
@@ -1009,6 +1090,7 @@ int main(int argc, char **argv)
 	cerr << endl << "process image speed too slow, larger than interval time between two consecutive frames" << endl;
       
     }
+	runnnig_flag = false;
 /******************* load image end ***********************/
     return 0;
 }

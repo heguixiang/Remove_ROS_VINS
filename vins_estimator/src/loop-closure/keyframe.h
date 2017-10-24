@@ -36,7 +36,7 @@ class KeyFrame
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	KeyFrame(double _header, Eigen::Vector3d _vio_T_w_c, Eigen::Matrix3d _vio_R_w_c, 
-				Eigen::Vector3d _cur_T_w_c, Eigen::Matrix3d _cur_R_w_c,cv::Mat &_image, const char *_brief_pattern_file);
+				Eigen::Vector3d _cur_T_w_c, Eigen::Matrix3d _cur_R_w_c,cv::Mat &_image, const char *_brief_pattern_file, Eigen::Vector3d _relocalize_t, Eigen::Matrix3d _relocalize_r);
 	void setExtrinsic(Eigen::Vector3d T, Eigen::Matrix3d R);	
 	void FundmantalMatrixRANSAC(vector<cv::Point2f> &measurements_old, vector<cv::Point2f> &measurements_old_norm,
                  	 const camodocal::CameraPtr &m_camera);
@@ -85,6 +85,7 @@ public:
 	void detectLoop(int index);
 
 	void removeLoop();
+	void getPath(Eigen::Vector3d& path);
 
 	int HammingDis(const BRIEF::bitset &a, const BRIEF::bitset &b);
 
@@ -105,6 +106,10 @@ public:
 	std::vector<BRIEF::bitset> descriptors;
 	//keypoints
 	std::vector<cv::KeyPoint> keypoints;
+	
+	//solomon add for point cloud(world)
+	Eigen::Vector3d relocalize_t;
+	Eigen::Matrix3d relocalize_r;
 
 	int global_index;
 	cv::Mat image;

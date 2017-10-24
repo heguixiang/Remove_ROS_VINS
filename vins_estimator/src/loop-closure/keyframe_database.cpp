@@ -1,4 +1,5 @@
 #include "keyframe_database.h"
+#include <pangolin/pangolin.h>
 KeyFrameDatabase::KeyFrameDatabase()
 {
 //	posegraph_visualization = new CameraPoseVisualization(0.0, 0.0, 1.0, 1.0);
@@ -10,6 +11,46 @@ KeyFrameDatabase::KeyFrameDatabase()
     r_drift = Eigen::Matrix3d::Identity();
     total_length = 0;
     last_P = Eigen::Vector3d(0, 0, 0);
+}
+void KeyFrameDatabase::viewPointClouds()
+{
+	list<KeyFrame*>::iterator iterator_keyframe;
+	for(iterator_keyframe = keyFrameList.begin(); iterator_keyframe != keyFrameList.end(); iterator_keyframe++)
+	{
+	//	glPushMatrix();
+    	glPointSize(1); //设备被渲染点的宽度，以像素位单位，默认为1
+    	glBegin(GL_POINTS);      //把每一个顶点当做一个独立的点进行处理
+    	//glColor3f(0.0,0.0,0.0);  //点的颜色为黑色
+    	glColor3f(1.0,1.0,1.0);  //点的颜色为白色
+	/*	cout << "relocalize_r:" << (*iterator_keyframe)->relocalize_r(0,0) << " " << (*iterator_keyframe)->relocalize_r(0,1) << " " << (*iterator_keyframe)->relocalize_r(0,2) << endl
+								<< (*iterator_keyframe)->relocalize_r(1,0) << " " << (*iterator_keyframe)->relocalize_r(1,1) << " " << (*iterator_keyframe)->relocalize_r(1,2) << endl
+								<< (*iterator_keyframe)->relocalize_r(2,0) << " " << (*iterator_keyframe)->relocalize_r(2,1) << " " << (*iterator_keyframe)->relocalize_r(2,2) << endl;
+		cout << "relocalize_t:" << (*iterator_keyframe)->relocalize_t(0) << " " << (*iterator_keyframe)->relocalize_t(1) << " " << (*iterator_keyframe)->relocalize_t(2) << endl;
+	*/
+	for(auto it = (*iterator_keyframe)->point_clouds.begin(); it!= (*iterator_keyframe)->point_clouds.end(); it++)
+		{
+			Vector3d pointCloudWorld;
+			pointCloudWorld = (*iterator_keyframe)->relocalize_r * (*it) + (*iterator_keyframe)->relocalize_t;
+			glVertex3f((float)(pointCloudWorld.x()), (float)(pointCloudWorld.y()), (float)(pointCloudWorld.z()));
+		}
+		glEnd();
+	//	glPopMatrix();
+	}
+}
+void KeyFrameDatabase::viewPath()
+{
+	Eigen::Vector3d tmp_path;
+	glColor3f(1.0f, 0.0f, 0.0f);
+	glLineWidth(2);
+	glBegin(GL_LINE_STRIP);
+
+	list<KeyFrame*>::iterator iterator_keyframe;
+	for(iterator_keyframe = keyFrameList.begin(); iterator_keyframe != keyFrameList.end(); iterator_keyframe++)
+	{
+		(*iterator_keyframe)->getPath(tmp_path);
+		glVertex3f(tmp_path.x(), tmp_path.y(), tmp_path.z());
+	}
+	glEnd();
 }
 void KeyFrameDatabase::add(KeyFrame* pKF)
 {

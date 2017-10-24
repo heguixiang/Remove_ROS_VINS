@@ -20,6 +20,9 @@ const double LOOP_INFO_VALUE = 50.0;
 //#define GT
 #define UNIT_SPHERE_ERROR
 
+extern float VISUALLOOKATX;
+extern float VISUALLOOKATY;
+extern float VISUALLOOKATZ;
 extern double INIT_DEPTH;
 extern double MIN_PARALLAX;
 extern int ESTIMATE_EXTRINSIC;

@@ -32,6 +32,9 @@ public:
 	void updateVisualization();
 	void addLoop(int loop_index);
 	nav_msgs::Path getPath();
+	void viewPointClouds();
+	void viewPath();
+
 	//CameraPoseVisualization* getPosegraphVisualization();
 	
 private:

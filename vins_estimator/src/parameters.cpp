@@ -50,6 +50,9 @@ int COL;
 int FOCAL_LENGTH;
 int FISHEYE;
 bool PUB_THIS_FRAME;
+float VISUALLOOKATX;
+float VISUALLOOKATY;
+float VISUALLOOKATZ;
 
 void readParameters(const string & config_file)
 {
@@ -68,6 +71,9 @@ void readParameters(const string & config_file)
    
     fsSettings["image_topic"] >> IMAGE_TOPIC;
     fsSettings["imu_topic"] >> IMU_TOPIC;
+    fsSettings["visualLookAtX"] >> VISUALLOOKATX;
+    fsSettings["visualLookAtY"] >> VISUALLOOKATY;
+    fsSettings["visualLookAtZ"] >> VISUALLOOKATZ;
 
     IMAGE_COL = fsSettings["image_width"];
     IMAGE_ROW = fsSettings["image_height"];

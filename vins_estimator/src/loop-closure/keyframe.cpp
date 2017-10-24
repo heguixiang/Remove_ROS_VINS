@@ -2,7 +2,7 @@
 
 KeyFrame::KeyFrame(double _header, Eigen::Vector3d _vio_T_w_i, Eigen::Matrix3d _vio_R_w_i, 
                    Eigen::Vector3d _cur_T_w_i, Eigen::Matrix3d _cur_R_w_i, 
-                   cv::Mat &_image, const char *_brief_pattern_file)
+                   cv::Mat &_image, const char *_brief_pattern_file, Eigen::Vector3d _relocalize_t, Eigen::Matrix3d _relocalize_r)
 :header{_header}, image{_image}, BRIEF_PATTERN_FILE(_brief_pattern_file)
 {
     T_w_i = _cur_T_w_i;
@@ -15,6 +15,8 @@ KeyFrame::KeyFrame(double _header, Eigen::Vector3d _vio_T_w_i, Eigen::Matrix3d _
     update_loop_info = 0;
     vio_T_w_i = _vio_T_w_i;
     vio_R_w_i = _vio_R_w_i;
+	relocalize_t = _relocalize_t; // solomon add for draw point cloud 
+	relocalize_r = _relocalize_r;
 }
 
 /*****************************************utility function************************************************/
@@ -329,6 +331,10 @@ void KeyFrame::removeLoop()
     update_loop_info = 0;
 }
 
+void KeyFrame::getPath(Eigen::Vector3d& path)
+{
+	path = T_w_i;
+}
 int KeyFrame::HammingDis(const BRIEF::bitset &a, const BRIEF::bitset &b)
 {
     BRIEF::bitset xor_of_bitset = a ^ b;

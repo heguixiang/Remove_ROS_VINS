@@ -24,14 +24,14 @@ Name=New Application Launcher
 Type=Native Application
 
 [Launch][Launch Configuration 0][Data]
-Arguments=./src/config/euroc/euroc_config.yaml ./data/image/MH_01_easy/data/ ./data/timestamps/MH01.txt ./data/imu/data.csv
+Arguments=
 Debugger Shell=
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
 Dependency Action=Nothing
 Display Demangle Names=true
 Display Static Members=false
 EnvironmentGroup=default
-Executable=file:///home/solomon/merge_vins_version/devel/lib/vins_estimator/vins_estimator
+Executable=file:///home/solomon/workspace/slam/VINS-MONO/catkin_ws/src/CMakeLists.txt
 External Terminal=konsole --noclose --workdir %workdir -e %exe
 GDB Path=file:///home/solomon/merge_vins_version/devel/lib/vins_estimator/vins_estimator
 Project Target=Remove_ROS_VINS,benchmark_publisher,benchmark_publisher
@@ -40,7 +40,7 @@ Remote GDB Run Script=
 Remote GDB Shell Script=
 Start With=ApplicationOutput
 Use External Terminal=false
-Working Directory=
+Working Directory=file:///home/solomon/workspace/slam/VINS-MONO/catkin_ws/src
 isExecutable=true
 
 [Project]

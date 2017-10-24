@@ -103,6 +103,9 @@ void Estimator::processIMU(double dt, const Vector3d &linear_acceleration, const
     }
     acc_0 = linear_acceleration;
     gyr_0 = angular_velocity;
+	//std::cout << "acc_0 : " << acc_0 << std::endl;
+	//std::cout << "gyr_0 : " << gyr_0 << std::endl;
+
 }
 
 void Estimator::processImage(const map<int, vector<pair<int, Vector3d>>> &image, const std_msgs::Header &header)
@@ -114,10 +117,10 @@ void Estimator::processImage(const map<int, vector<pair<int, Vector3d>>> &image,
     else
         marginalization_flag = MARGIN_SECOND_NEW;
 
-   // ROS_DEBUG("this frame is--------------------%s", marginalization_flag ? "reject" : "accept");
+  // ("this frame is--------------------%s", marginalization_flag ? "reject" : "accept");
    // ROS_DEBUG("%s", marginalization_flag ? "Non-keyframe" : "Keyframe");
    // ROS_DEBUG("Solving %d", frame_count);
-  //  ROS_DEBUG("number of feature: %d", f_manager.getFeatureCount());
+   //std::cout  << "number of feature: " <<  f_manager.getFeatureCount() << std::endl;
     Headers[frame_count] = header;
 
     ImageFrame imageframe(image, header.stamp.toSec());
@@ -261,7 +264,17 @@ bool Estimator::initialStructure()
      //   ROS_INFO("Not enough features or parallax; Move device around");
         return false;
     }
-    GlobalSFM sfm;
+	std::cout << "relative_R:" << std::endl;
+
+	std::cout << relative_R << std::endl;
+
+	std::cout << "relative_T:" << std::endl;
+
+	std::cout << relative_T << std::endl;
+
+	std::cout << "l :" << l << std::endl;
+    
+	GlobalSFM sfm;
     if(!sfm.construct(frame_count + 1, Q, T, l,
               relative_R, relative_T,
               sfm_f, sfm_tracked_points))
@@ -452,7 +465,7 @@ bool Estimator::relativePose(Matrix3d &relative_R, Vector3d &relative_T, int &l)
             if(average_parallax * 460 > 30 && m_estimator.solveRelativeRT(corres, relative_R, relative_T))
             {
                 l = i;
-            //    ROS_DEBUG("average_parallax %f choose l %d and newest frame to triangulate the whole structure", average_parallax * 460, l);
+				std::cout << "average_parallax:" << average_parallax*460 <<  " choose l :" << l << " and newest frame to triangulate the whole structure, corres.size():" <<  corres.size()  << std::endl;
                 return true;
             }
         }
