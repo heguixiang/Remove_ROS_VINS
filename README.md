@@ -1,4 +1,4 @@
-# This  repositories is a version of HKUST-Aerial-Robotics/VINS-Mono without ROS mechanism. There is no ui interface, the project can be passed on the euroc dataset so far. [EuRoc](http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets) ASL data format, this version can run both on 32bit OS and 64 bit OS platform.
+# This  repositories is a version of HKUST-Aerial-Robotics/VINS-Mono without ROS mechanism. The project can be passed on the euroc dataset so far. [EuRoc](http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets) ASL data format, this version can run both on 32bit OS and 64 bit OS platform.
 
 # thanks to the reference program： 
 # [HKUST-Aerial-Robotics/VINS-Mono](https://github.com/HKUST-Aerial-Robotics/VINS-Mono)
